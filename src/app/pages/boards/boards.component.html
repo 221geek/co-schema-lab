@@ -1,0 +1,83 @@
+<div class="min-h-screen w-full bg-zinc-950 grid-bg flex flex-col">
+    <!-- Header -->
+    <header
+        class="h-14 border-b border-zinc-800 flex items-center justify-between px-5 bg-zinc-950/80 backdrop-blur-sm z-50">
+        <div class="flex items-center gap-6">
+            <div class="flex items-center gap-2">
+                <img src="/Coschemalab.png" alt="CoSchemaLab" class="h-8 w-auto object-contain">
+            </div>
+            <div class="h-4 w-[1px] bg-zinc-800"></div>
+            <span class="text-sm text-zinc-400">Mes boards</span>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button (click)="logout()"
+                class="flex items-center gap-2 px-3 py-1.5 rounded-md border border-zinc-800 hover:bg-zinc-900 hover:text-red-400 transition-colors text-xs font-medium">
+                <iconify-icon icon="solar:logout-2-linear" class="text-sm"></iconify-icon>
+                Déconnexion
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-8 overflow-auto">
+        <div class="max-w-6xl mx-auto">
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold text-white">Mes boards</h1>
+                <p class="text-zinc-500 text-sm mt-1">Créez et gérez vos schémas de base de données</p>
+                @if (errorMessage) {
+                <div class="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+                    {{ errorMessage }}
+                </div>
+                }
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <!-- Create New Board Card -->
+                <button (click)="createBoard()" [disabled]="creating"
+                    class="group flex flex-col items-center justify-center min-h-[180px] rounded-xl border-2 border-dashed border-zinc-700 hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-all duration-200">
+                    <div
+                        class="w-12 h-12 rounded-xl bg-zinc-800 group-hover:bg-indigo-500/20 flex items-center justify-center mb-3 transition-colors">
+                        <iconify-icon icon="solar:add-circle-linear"
+                            class="text-2xl text-zinc-500 group-hover:text-indigo-400"></iconify-icon>
+                    </div>
+                    <span class="text-sm font-medium text-zinc-400 group-hover:text-indigo-400 transition-colors">
+                        @if (creating) {
+                            Création...
+                        } @else {
+                            Nouveau board
+                        }
+                    </span>
+                </button>
+
+                <!-- Board Cards -->
+                @for (board of boards$ | async; track board.id) {
+                <div (click)="openBoard(board)"
+                    class="group relative flex flex-col min-h-[180px] rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-indigo-500/50 hover:bg-zinc-900/80 transition-all cursor-pointer overflow-hidden">
+                    <div class="flex-1 p-5">
+                        <div
+                            class="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center mb-3">
+                            <iconify-icon icon="solar:database-bold" class="text-xl text-indigo-400"></iconify-icon>
+                        </div>
+                        <h3 class="font-semibold text-white truncate">{{ board.name }}</h3>
+                        <p class="text-xs text-zinc-500 mt-1">
+                            {{ (board.tables || []).length }} table(s) · Modifié {{ formatDate(board.updatedAt) }}
+                        </p>
+                    </div>
+                    <button (click)="deleteBoard($event, board)"
+                        class="absolute top-3 right-3 p-1.5 rounded-md text-zinc-500 hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all">
+                        <iconify-icon icon="solar:trash-bin-trash-linear" class="text-lg"></iconify-icon>
+                    </button>
+                </div>
+                }
+            </div>
+
+            @if ((boards$ | async)?.length === 0) {
+            <div class="text-center py-16">
+                <p class="text-zinc-500">Aucun board pour le moment.</p>
+                <p class="text-zinc-600 text-sm mt-1">Cliquez sur "Nouveau board" pour commencer.</p>
+            </div>
+            }
+        </div>
+    </main>
+</div>

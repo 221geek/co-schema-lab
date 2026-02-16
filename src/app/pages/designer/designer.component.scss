@@ -1,0 +1,74 @@
+:host {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+}
+
+.connection-point {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #52525b;
+    border: 2px solid #27272a;
+    opacity: 0.25;
+    cursor: crosshair;
+    z-index: 50;
+    transition: background 0.15s, transform 0.15s, opacity 0.15s;
+    .group:hover &,
+    &:hover {
+        background: #818cf8;
+        opacity: 1;
+    }
+    &.connection-point-top {
+        position: absolute;
+        top: -6px;
+        left: 50%;
+        transform: translateX(-50%);
+        .group:hover &,
+        &:hover { transform: translateX(-50%) scale(1.2); }
+    }
+    &.connection-point-right {
+        position: absolute;
+        right: -6px;
+        top: 50%;
+        transform: translateY(-50%);
+        .group:hover &,
+        &:hover { transform: translateY(-50%) scale(1.2); }
+    }
+    &.connection-point-bottom {
+        position: absolute;
+        bottom: -6px;
+        left: 50%;
+        transform: translateX(-50%);
+        .group:hover &,
+        &:hover { transform: translateX(-50%) scale(1.2); }
+    }
+    &.connection-point-left {
+        position: absolute;
+        left: -6px;
+        top: 50%;
+        transform: translateY(-50%);
+        .group:hover &,
+        &:hover { transform: translateY(-50%) scale(1.2); }
+    }
+}
+
+.zoom-slider {
+    &::-webkit-slider-runnable-track {
+        height: 6px;
+        background: #3f3f46;
+        border-radius: 3px;
+    }
+    &::-webkit-slider-thumb {
+        height: 14px;
+        width: 14px;
+        margin-top: -4px;
+        background: #6366f1;
+        border: 2px solid #4f46e5;
+        border-radius: 50%;
+        cursor: grab;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+}

@@ -1,0 +1,80 @@
+<div class="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-zinc-950 grid-bg">
+    <div
+        class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/20 rounded-full blur-[120px] animate-pulse">
+    </div>
+    <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/20 rounded-full blur-[120px] animate-pulse"
+        style="animation-delay: 2s;"></div>
+
+    <div class="relative z-10 w-full max-w-md p-8 mx-4">
+        <div
+            class="bg-zinc-900/50 backdrop-blur-xl border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden p-8 animate-in fade-in zoom-in duration-500">
+
+            <div class="flex flex-col items-center gap-4 mb-8">
+                <img src="/Coschemalab.png" alt="CoSchemaLab" class="h-14 w-auto object-contain">
+                <div class="text-center">
+                    <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400">
+                        Create Account</h1>
+                    <p class="text-zinc-500 text-sm mt-1">Co-create your database schemas effortlessly.</p>
+                </div>
+            </div>
+
+            @if (errorMessage()) {
+            <div class="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+                {{ errorMessage() }}
+            </div>
+            }
+
+            <form (submit)="onSignup(); $event.preventDefault()" class="space-y-6">
+                <div class="space-y-2">
+                    <label class="text-[10px] uppercase font-bold text-zinc-500 tracking-widest ml-1">Email</label>
+                    <div class="relative">
+                        <iconify-icon icon="solar:letter-linear"
+                            class="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-lg"></iconify-icon>
+                        <input type="email" [ngModel]="email()" (ngModelChange)="email.set($event)" name="email"
+                            placeholder="name@company.com" [disabled]="loading()"
+                            class="w-full bg-zinc-950/50 border border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 outline-none transition-all placeholder:text-zinc-700 disabled:opacity-50">
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-[10px] uppercase font-bold text-zinc-500 tracking-widest ml-1">Password</label>
+                    <div class="relative">
+                        <iconify-icon icon="solar:lock-password-linear"
+                            class="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-lg"></iconify-icon>
+                        <input type="password" [ngModel]="password()" (ngModelChange)="password.set($event)"
+                            name="password" placeholder="••••••••" [disabled]="loading()"
+                            class="w-full bg-zinc-950/50 border border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 outline-none transition-all placeholder:text-zinc-700 disabled:opacity-50">
+                    </div>
+                </div>
+
+                <button type="submit" [disabled]="loading()"
+                    class="w-full bg-white text-black font-bold py-3.5 rounded-xl hover:bg-zinc-200 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-xl shadow-white/5 disabled:opacity-50 disabled:cursor-not-allowed">
+                    @if (loading()) {
+                        <span class="animate-pulse">Création...</span>
+                    } @else {
+                        <span>Sign Up</span>
+                        <iconify-icon icon="solar:arrow-right-linear" class="text-lg"></iconify-icon>
+                    }
+                </button>
+            </form>
+
+            <div class="flex items-center gap-4 my-8">
+                <div class="h-[1px] flex-1 bg-zinc-800"></div>
+                <span class="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Or continue with</span>
+                <div class="h-[1px] flex-1 bg-zinc-800"></div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-3">
+                <button (click)="onGoogleSignup()" [disabled]="loading()"
+                    class="w-full bg-zinc-950 border border-zinc-800 text-white font-medium py-3 rounded-xl hover:bg-zinc-900 active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <iconify-icon icon="logos:google-icon" class="text-lg"></iconify-icon>
+                    <span class="text-sm">Sign up with Google</span>
+                </button>
+            </div>
+
+            <p class="text-center text-zinc-500 text-[10px] mt-8 uppercase font-medium tracking-wider">
+                Already have an account? <a [routerLink]="getLoginRoute().path" [queryParams]="getLoginRoute().queryParams ?? {}" class="text-indigo-400 font-bold hover:underline">Sign in</a>
+            </p>
+        </div>
+    </div>
+</div>

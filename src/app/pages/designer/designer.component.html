@@ -1,0 +1,453 @@
+<header
+    class="h-14 border-b border-zinc-800 flex items-center justify-between px-5 bg-zinc-950/80 backdrop-blur-sm z-50">
+    <div class="flex items-center gap-6">
+        <button (click)="goToBoards()" class="flex items-center gap-2 group">
+            <img src="/Coschemalab.png" alt="CoSchemaLab" class="h-8 w-auto object-contain">
+        </button>
+        <div class="h-4 w-[1px] bg-zinc-800"></div>
+        <input type="text" [value]="boardName()" (focus)="pushState()" (input)="boardName.set($any($event.target).value); scheduleAutoSave()"
+            class="text-sm text-zinc-300 bg-transparent border-none focus:outline-none focus:ring-0 w-48 px-2 py-1 rounded hover:bg-zinc-800/50"
+            placeholder="Nom du board">
+    </div>
+
+    <div class="flex items-center gap-3">
+        <div class="flex items-center gap-1 -space-x-2">
+            @for (user of connectedUsers(); track user.userId) {
+            <div [title]="getHoverLabel(user)"
+                [ngClass]="['w-8 h-8 min-w-[32px] rounded-full border-2 border-zinc-800 flex items-center justify-center overflow-hidden ring-2 shrink-0 transition-all hover:scale-110 hover:z-10', getUserColor(user.userId), getUserRingColor(user.userId)]">
+                @if (user.photoURL) {
+                <img [src]="user.photoURL" [alt]="user.displayName || ''" class="w-full h-full object-cover">
+                } @else {
+                <span class="text-xs font-semibold text-white">{{ getInitials(user) }}</span>
+                }
+            </div>
+            }
+        </div>
+        <div class="h-4 w-[1px] bg-zinc-800 mx-1"></div>
+        <button (click)="logout()"
+            class="flex items-center gap-2 px-3 py-1.5 rounded-md border border-zinc-800 hover:bg-zinc-900 hover:text-red-400 transition-colors text-xs font-medium">
+            <iconify-icon icon="solar:logout-2-linear" class="text-sm"></iconify-icon>
+            Déconnexion
+        </button>
+    </div>
+</header>
+
+@if (loading()) {
+<div class="flex-1 flex items-center justify-center bg-[#09090b]">
+    <div class="flex flex-col items-center gap-4">
+        <div class="w-10 h-10 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+        <span class="text-zinc-500 text-sm">Chargement du board...</span>
+    </div>
+</div>
+} @else {
+<main class="flex-1 relative overflow-hidden grid-bg flex bg-[#09090b]">
+    <!-- Toolbar -->
+    <div class="absolute left-5 top-5 z-40 flex flex-col gap-2">
+        <div
+            class="bg-zinc-900/90 border border-zinc-800 backdrop-blur rounded-lg p-1.5 flex flex-col gap-1 shadow-2xl">
+            <button class="p-2 rounded-md bg-zinc-800 text-white hover:bg-zinc-700 transition-colors tooltip-trigger">
+                <iconify-icon icon="solar:cursor-linear" class="text-lg"></iconify-icon>
+            </button>
+            <button (click)="addTable()"
+                class="p-2 rounded-md text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors"
+                title="Add Table">
+                <iconify-icon icon="solar:widget-add-linear" class="text-lg"></iconify-icon>
+            </button>
+            <button (click)="copyBoardLink()"
+                class="p-2 rounded-md text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors"
+                [title]="linkCopied() ? 'Copié !' : 'Copier le lien du board'">
+                <iconify-icon [icon]="linkCopied() ? 'solar:check-circle-linear' : 'solar:link-linear'" class="text-lg"></iconify-icon>
+            </button>
+        </div>
+        <!-- <div class="bg-zinc-900/90 border border-zinc-800 backdrop-blur rounded-lg p-1 flex items-center gap-0.5 shadow-2xl">
+            <button (click)="zoomOut()" class="p-2 rounded-md text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors" title="Zoom arrière">
+                <iconify-icon icon="solar:minimalistic-magnifer-linear" class="text-lg"></iconify-icon>
+            </button>
+            <button (click)="zoomIn()" class="p-2 rounded-md text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors" title="Zoom avant">
+                <iconify-icon icon="solar:minimalistic-magnifer-add-linear" class="text-lg"></iconify-icon>
+            </button>
+        </div> -->
+    </div>
+
+    <!-- Canvas -->
+    <div #canvasRef class="flex-1 relative h-full overflow-hidden" (click)="selectedTableId.set(null); selectedRelationshipId.set(null); cancelConnecting()"
+        (mousemove)="onCanvasMouseMove($event)" (wheel)="onCanvasWheel($event)">
+        <!-- Remote cursors -->
+        @for (user of getRemoteCursors(); track user.userId) {
+        <div class="absolute pointer-events-none z-50 transition-all duration-75"
+            [style.left.px]="user.cursorX" [style.top.px]="user.cursorY"
+            style="transform: translate(-2px, -2px);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="drop-shadow-lg"
+                [style.color]="getUserCursorColor(user.userId)">
+                <path d="M5 3L5 21L9 17L13 21L14 20L10 16L19 16L5 3Z" fill="currentColor" stroke="white" stroke-width="1"/>
+            </svg>
+            <div class="ml-3 -mt-4 px-2 py-0.5 rounded text-[10px] font-medium whitespace-nowrap shadow-lg border border-white/20"
+                [style.background]="getUserCursorColor(user.userId)" [style.color]="'white'">
+                {{ user.displayName || user.email || 'Collaborateur' }}
+            </div>
+        </div>
+        }
+        <div #canvasTransform class="absolute inset-0 transition-transform duration-150" [style.transform]="'translate(' + panOffsetX() + 'px, ' + panOffsetY() + 'px) scale(' + zoomLevel() + ')'" style="transform-origin: 0 0;">
+            <!-- SVG Connections -->
+            <svg class="absolute inset-0 w-full h-full z-0">
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#6366f1"/>
+                    </marker>
+                    <marker id="arrowhead-selected" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#818cf8"/>
+                    </marker>
+                </defs>
+                @for (rel of getValidRelationships(); track rel.id) {
+                <!-- Zone de clic (large) -->
+                <path
+                    [attr.d]="getRelationshipPath(rel)"
+                    fill="none" stroke="transparent" stroke-width="14" stroke-linecap="round"
+                    class="cursor-pointer"
+                    [attr.stroke-dasharray]="rel.type === 'M:N' ? '4 4' : ''"
+                    (click)="selectRelationship(rel.id, $event)">
+                </path>
+                <!-- Ligne visible avec flèche de direction (→ vers toTable) -->
+                <path
+                    [attr.d]="getRelationshipPath(rel)"
+                    fill="none"
+                    [attr.stroke]="selectedRelationshipId() === rel.id ? '#818cf8' : '#6366f1'"
+                    [attr.marker-end]="selectedRelationshipId() === rel.id ? 'url(#arrowhead-selected)' : 'url(#arrowhead)'"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    pointer-events="none"
+                    [attr.stroke-dasharray]="rel.type === 'M:N' ? '4 4' : ''">
+                </path>
+                }
+                @if (getPreviewPath(); as path) {
+                <path [attr.d]="path" fill="none" stroke="#818cf8" stroke-width="2" stroke-dasharray="4 4" opacity="0.8" pointer-events="none">
+                </path>
+                }
+            </svg>
+
+            <!-- Relationship badges (sur la ligne) - z-40 pour passer au-dessus des tables -->
+            @for (rel of getValidRelationships(); track rel.id) {
+            @let mid = getRelationshipMidpoint(rel);
+            <div
+                [style.left.px]="mid.x"
+                [style.top.px]="mid.y"
+                class="absolute z-40 -translate-x-1/2 -translate-y-1/2 cursor-pointer group/rel"
+                (click)="selectRelationship(rel.id, $event)">
+                <div
+                    [class.border-indigo-500]="selectedRelationshipId() === rel.id"
+                    class="bg-zinc-900 border rounded-full px-2 py-0.5 flex items-center gap-1.5 shadow-lg transition-colors hover:border-indigo-500/50 justify-center"
+                    [class.border-zinc-700]="selectedRelationshipId() !== rel.id">
+                    <span class="text-[10px] font-mono text-zinc-500 max-w-16 truncate" [title]="getTableName(rel.fromTableId)">{{ getTableName(rel.fromTableId) }}</span>
+                    <iconify-icon icon="solar:arrow-right-linear" class="text-zinc-500 text-[10px] shrink-0"></iconify-icon>
+                    <span class="text-[10px] font-mono text-zinc-500 max-w-16 truncate" [title]="getTableName(rel.toTableId)">{{ getTableName(rel.toTableId) }}</span>
+                    <span class="text-zinc-600">·</span>
+                    <iconify-icon icon="solar:link-linear"
+                        [class]="rel.type === 'M:N' ? 'text-emerald-400 text-[10px]' : 'text-indigo-400 text-[10px]'"></iconify-icon>
+                    <span class="text-[10px] font-medium text-zinc-300">{{ getRelationshipTypeLabel(rel.type) }}</span>
+                </div>
+                <!-- Menu déroulant : visible au survol OU quand la relation est sélectionnée (clic) -->
+                <div
+                    [class]="(selectedRelationshipId() === rel.id ? 'block' : 'hidden group-hover/rel:block') + ' absolute top-full left-1/2 -translate-x-1/2 pt-3 -mt-1 w-40 bg-zinc-900 border border-zinc-800 rounded-md shadow-xl overflow-hidden py-1 z-50'"
+                    (click)="$event.stopPropagation()">
+                    <div class="px-2 py-1.5 text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">Cardinalité</div>
+                    <button type="button" (click)="updateRelationshipType(rel.id, '1:1')"
+                        class="w-full px-2 py-1.5 hover:bg-zinc-800 text-[10px] text-left flex justify-between items-center transition-colors"
+                        [class.text-indigo-400]="rel.type === '1:1'"
+                        [class.text-zinc-400]="rel.type !== '1:1'"
+                        [class.bg-zinc-800/50]="rel.type === '1:1'">
+                        One to One
+                        @if (rel.type === '1:1') {
+                        <iconify-icon icon="solar:check-circle-linear" class="text-indigo-400"></iconify-icon>
+                        }
+                    </button>
+                    <button type="button" (click)="updateRelationshipType(rel.id, '1:N')"
+                        class="w-full px-2 py-1.5 hover:bg-zinc-800 text-[10px] text-left flex justify-between items-center transition-colors"
+                        [class.text-indigo-400]="rel.type === '1:N'"
+                        [class.text-zinc-400]="rel.type !== '1:N'"
+                        [class.bg-zinc-800/50]="rel.type === '1:N'">
+                        One to Many
+                        @if (rel.type === '1:N') {
+                        <iconify-icon icon="solar:check-circle-linear" class="text-indigo-400"></iconify-icon>
+                        }
+                    </button>
+                    <button type="button" (click)="updateRelationshipType(rel.id, 'M:N')"
+                        class="w-full px-2 py-1.5 hover:bg-zinc-800 text-[10px] text-left flex justify-between items-center transition-colors"
+                        [class.text-emerald-400]="rel.type === 'M:N'"
+                        [class.text-zinc-400]="rel.type !== 'M:N'"
+                        [class.bg-zinc-800/50]="rel.type === 'M:N'">
+                        Many to Many
+                        @if (rel.type === 'M:N') {
+                        <iconify-icon icon="solar:check-circle-linear" class="text-emerald-400"></iconify-icon>
+                        }
+                    </button>
+                    <div class="border-t border-zinc-800 my-1"></div>
+                    <button type="button" (click)="reverseRelationshipDirection(rel.id)"
+                        class="w-full px-2 py-1.5 hover:bg-zinc-800 text-[10px] text-zinc-400 hover:text-white flex items-center gap-2 transition-colors">
+                        <iconify-icon icon="solar:refresh-linear" class="text-xs"></iconify-icon>
+                        Inverser la direction
+                    </button>
+                    <button type="button" (click)="removeRelationship(rel.id)"
+                        class="w-full px-2 py-1.5 hover:bg-red-500/10 text-[10px] text-red-400 hover:text-red-300 flex items-center gap-2 transition-colors">
+                        <iconify-icon icon="solar:trash-bin-trash-linear" class="text-xs"></iconify-icon>
+                        Supprimer
+                    </button>
+                </div>
+            </div>
+            }
+
+            <!-- Tables -->
+            @for (table of tables(); track table.id) {
+            <div [style.left.px]="table.x" [style.top.px]="table.y"
+                (click)="$event.stopPropagation(); selectTable(table.id)" cdkDrag
+                (cdkDragEnded)="onDragEnded($event, table)" [class.border-indigo-500]="selectedTableId() === table.id"
+                [class.ring-2]="selectedTableId() === table.id"
+                [class.ring-indigo-500/50]="selectedTableId() === table.id"
+                [class.z-30]="selectedTableId() === table.id"
+                class="absolute w-64 bg-[#1c1c1f] border border-[#3f3f46] rounded-lg shadow-2xl flex flex-col z-20 hover:border-indigo-500/50 transition-all group active:scale-[0.98] cursor-pointer relative">
+                <!-- Connection points -->
+                <button type="button" data-connection-point [attr.data-table-id]="table.id" data-side="top"
+                    (mousedown)="onConnectionPointMouseDown(table.id, 'top', $event)"
+                    (click)="onConnectionPointClick(table.id, 'top', $event)"
+                    [class.ring-2]="connectingFrom()?.tableId === table.id && connectingFrom()?.side === 'top'"
+                    [class.ring-indigo-500]="connectingFrom()?.tableId === table.id && connectingFrom()?.side === 'top'"
+                    [class.bg-indigo-500]="connectingFrom()?.tableId === table.id && connectingFrom()?.side === 'top'"
+                    class="connection-point connection-point-top" title="Point de connexion">
+                </button>
+                <button type="button" data-connection-point [attr.data-table-id]="table.id" data-side="right"
+                    (mousedown)="onConnectionPointMouseDown(table.id, 'right', $event)"
+                    (click)="onConnectionPointClick(table.id, 'right', $event)"
+                    [class.ring-2]="connectingFrom()?.tableId === table.id && connectingFrom()?.side === 'right'"
+                    [class.ring-indigo-500]="connectingFrom()?.tableId === table.id && connectingFrom()?.side === 'right'"
+                    [class.bg-indigo-500]="connectingFrom()?.tableId === table.id && connectingFrom()?.side === 'right'"
+                    class="connection-point connection-point-right" title="Point de connexion">
+                </button>
+                <button type="button" data-connection-point [attr.data-table-id]="table.id" data-side="bottom"
+                    (mousedown)="onConnectionPointMouseDown(table.id, 'bottom', $event)"
+                    (click)="onConnectionPointClick(table.id, 'bottom', $event)"
+                    [class.ring-2]="connectingFrom()?.tableId === table.id && connectingFrom()?.side === 'bottom'"
+                    [class.ring-indigo-500]="connectingFrom()?.tableId === table.id && connectingFrom()?.side === 'bottom'"
+                    [class.bg-indigo-500]="connectingFrom()?.tableId === table.id && connectingFrom()?.side === 'bottom'"
+                    class="connection-point connection-point-bottom" title="Point de connexion">
+                </button>
+                <button type="button" data-connection-point [attr.data-table-id]="table.id" data-side="left"
+                    (mousedown)="onConnectionPointMouseDown(table.id, 'left', $event)"
+                    (click)="onConnectionPointClick(table.id, 'left', $event)"
+                    [class.ring-2]="connectingFrom()?.tableId === table.id && connectingFrom()?.side === 'left'"
+                    [class.ring-indigo-500]="connectingFrom()?.tableId === table.id && connectingFrom()?.side === 'left'"
+                    [class.bg-indigo-500]="connectingFrom()?.tableId === table.id && connectingFrom()?.side === 'left'"
+                    class="connection-point connection-point-left" title="Point de connexion">
+                </button>
+                <!-- Header -->
+                <div cdkDragHandle
+                    class="p-3 border-b border-[#27272a] flex items-center justify-between bg-[#1c1c1f]/80 rounded-t-lg handle cursor-move">
+                    <div class="flex items-center gap-2">
+                        <iconify-icon [icon]="table.icon" class="text-indigo-400 text-lg"></iconify-icon>
+                        <input type="text" [(ngModel)]="table.name" (focus)="pushState()" (ngModelChange)="scheduleAutoSave()" (click)="$event.stopPropagation()"
+                            class="bg-transparent border-none text-sm font-bold text-white focus:outline-none focus:ring-0 w-32 p-0 tracking-tight placeholder-zinc-600">
+                    </div>
+                    <button (click)="$event.stopPropagation(); removeTable(table.id)"
+                        class="text-zinc-600 hover:text-red-400 transition-colors">
+                        <iconify-icon icon="solar:trash-bin-trash-linear"></iconify-icon>
+                    </button>
+                </div>
+                <!-- Fields -->
+                <div class="flex flex-col">
+                    @for (field of table.fields; track field.id) {
+                    <div
+                        class="px-3 py-2 border-b border-[#27272a]/50 flex items-center gap-2 hover:bg-[#27272a]/50 group/field">
+                        @if (field.isPrimary) {
+                        <iconify-icon icon="solar:key-linear" class="text-yellow-500 text-xs"></iconify-icon>
+                        } @else if (field.type === 'Relation') {
+                        <iconify-icon icon="solar:link-linear" class="text-indigo-400 text-xs"></iconify-icon>
+                        } @else {
+                        <div class="w-3 h-3 border border-[#3f3f46] rounded-sm"></div>
+                        }
+                        <span class="text-xs text-zinc-200 font-mono flex-1">{{ field.name }}</span>
+                        <span [class]="'text-[10px] px-1.5 py-0.5 rounded font-medium ' + 
+                  (field.isPrimary ? 'text-yellow-500 bg-yellow-500/10' : 
+                   field.type === 'Relation' ? 'text-indigo-400 bg-indigo-500/10 border border-indigo-500/20' :
+                   field.type === 'UUID' ? 'text-yellow-500 bg-yellow-500/10' :
+                   field.type === 'Money' ? 'text-emerald-400 bg-emerald-500/10' :
+                   field.type === 'Enum' ? 'text-purple-400 bg-purple-500/10' :
+                   'text-blue-400 bg-blue-500/10')">
+                            {{ field.faker || field.type }}
+                        </span>
+                    </div>
+                    }
+                    <div (click)="$event.stopPropagation(); addField(table.id)"
+                        class="px-3 py-2 flex items-center gap-2 hover:bg-[#27272a]/30 group/field cursor-pointer text-zinc-500 hover:text-zinc-300 transition-colors">
+                        <iconify-icon icon="solar:add-circle-linear" class="text-sm"></iconify-icon>
+                        <span class="text-xs font-medium">Add Property</span>
+                    </div>
+                </div>
+            </div>
+            }
+        </div>
+    </div>
+
+    <!-- Properties Panel -->
+    @if (selectedTable; as sTable) {
+    <aside
+        class="w-80 border-l border-zinc-800 bg-zinc-950/50 backdrop-blur-md p-6 flex flex-col gap-6 animate-in slide-in-from-right duration-300">
+        <div class="flex items-center justify-between">
+            <h2 class="text-lg font-bold text-white">Table Properties</h2>
+            <button (click)="selectedTableId.set(null)" class="text-zinc-500 hover:text-white">
+                <iconify-icon icon="solar:close-circle-linear" class="text-xl"></iconify-icon>
+            </button>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <label class="text-[10px] uppercase font-bold text-zinc-500 tracking-widest mb-1.5 block">Table
+                    Name</label>
+                <input type="text" [(ngModel)]="sTable.name" (focus)="pushState()" (ngModelChange)="scheduleAutoSave()"
+                    class="w-full bg-[#1c1c1f] border border-[#27272a] rounded-md px-3 py-2 text-sm text-white focus:border-indigo-500 outline-none transition-colors">
+            </div>
+
+            <div>
+                <label class="text-[10px] uppercase font-bold text-zinc-500 tracking-widest mb-3 block">Columns ({{
+                    sTable.fields.length }})</label>
+                <div class="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+                    @for (field of sTable.fields; track field.id) {
+                    <div class="p-3 bg-[#1c1c1f]/50 border border-[#27272a] rounded-md group">
+                        <div class="flex items-center gap-2 mb-2">
+                            <input type="text" [(ngModel)]="field.name" (focus)="pushState()" (ngModelChange)="scheduleAutoSave()"
+                                class="bg-transparent border-none text-xs font-mono text-indigo-300 p-0 w-full focus:ring-0">
+                            <iconify-icon icon="solar:settings-linear"
+                                class="text-zinc-600 group-hover:text-zinc-400 cursor-pointer"></iconify-icon>
+                        </div>
+                        <div class="flex gap-2">
+                            <select [(ngModel)]="field.type" (focus)="pushState()" (ngModelChange)="scheduleAutoSave()"
+                                class="bg-[#27272a] border-none text-[10px] text-zinc-400 rounded px-1.5 py-0.5 outline-none">
+                                <option value="UUID">UUID</option>
+                                <option value="String">String</option>
+                                <option value="Money">Money</option>
+                                <option value="Enum">Enum</option>
+                            </select>
+                        </div>
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-auto pt-6 border-t border-zinc-800">
+            <button (click)="removeTable(sTable.id)"
+                class="w-full py-2.5 rounded-md border border-red-500/30 text-red-400 text-xs font-semibold hover:bg-red-500/10 transition-colors flex items-center justify-center gap-2">
+                <iconify-icon icon="solar:trash-bin-trash-linear" class="text-sm"></iconify-icon>
+                Delete Table
+            </button>
+        </div>
+    </aside>
+    }
+
+</main>
+
+<!-- Footer: Bouton Export unique -->
+<div class="absolute bottom-5 right-5 z-50">
+    <button (click)="exportPanelOpen.set(true)"
+        class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-900/90 border border-zinc-800 hover:bg-zinc-800 backdrop-blur shadow-xl text-xs font-medium transition-colors">
+        <iconify-icon icon="solar:export-linear" class="text-sm"></iconify-icon>
+        Export
+    </button>
+</div>
+
+<!-- Sidenav Export -->
+@if (exportPanelOpen()) {
+<aside
+    class="fixed inset-y-0 right-0 w-80 border-l border-zinc-800 bg-zinc-950/95 backdrop-blur-md z-[60] flex flex-col animate-in slide-in-from-right duration-300">
+    <div class="flex items-center justify-between p-6 border-b border-zinc-800">
+        <h2 class="text-lg font-bold text-white">Exporter le schéma</h2>
+        <button (click)="exportPanelOpen.set(false)" class="text-zinc-500 hover:text-white transition-colors">
+            <iconify-icon icon="solar:close-circle-linear" class="text-xl"></iconify-icon>
+        </button>
+    </div>
+    <div class="p-6 flex flex-col gap-4 overflow-y-auto">
+        <!-- Switch fausses données -->
+        <div class="flex items-center justify-between gap-3">
+            <span class="text-sm text-zinc-300">Générer des fausses données</span>
+            <button type="button" role="switch" [attr.aria-checked]="exportWithFakeData()"
+                (click)="exportWithFakeData.set(!exportWithFakeData())"
+                [class.bg-indigo-500]="exportWithFakeData()"
+                [class.bg-zinc-700]="!exportWithFakeData()"
+                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:ring-offset-2 focus:ring-offset-zinc-950">
+                <span [class.translate-x-5]="exportWithFakeData()" [class.translate-x-1]="!exportWithFakeData()"
+                    class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200"></span>
+            </button>
+        </div>
+
+        @if (exportWithFakeData()) {
+        <div class="space-y-4">
+            <label class="text-[10px] uppercase font-bold text-zinc-500 tracking-widest block">Lignes par table</label>
+            @for (table of tables(); track table.id) {
+            <div class="flex items-center justify-between gap-3">
+                <span class="text-sm text-zinc-300 truncate">{{ table.name }}</span>
+                <input type="number" min="0" [ngModel]="getExportRowCount(table.id)"
+                    (ngModelChange)="setExportRowCount(table.id, +$event)"
+                    class="w-20 bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-sm text-white focus:border-indigo-500 outline-none">
+            </div>
+            }
+        </div>
+        <div class="border-t border-zinc-800 pt-4"></div>
+        }
+
+        <div class="flex flex-col gap-3">
+            <button (click)="exportSql(); exportPanelOpen.set(false)"
+                class="flex items-center gap-3 w-full px-4 py-3 rounded-lg bg-zinc-900/80 border border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700 transition-colors text-left">
+                <iconify-icon icon="solar:database-linear" class="text-indigo-400 text-xl"></iconify-icon>
+                <div>
+                    <span class="text-sm font-medium text-white block">SQL</span>
+                    <span class="text-[10px] text-zinc-500">{{ exportWithFakeData() ? 'Schema + INSERT' : 'Script CREATE TABLE' }}</span>
+                </div>
+            </button>
+            <button (click)="exportJson(); exportPanelOpen.set(false)"
+                class="flex items-center gap-3 w-full px-4 py-3 rounded-lg bg-zinc-900/80 border border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700 transition-colors text-left">
+                <iconify-icon icon="solar:document-code-linear" class="text-indigo-400 text-xl"></iconify-icon>
+                <div>
+                    <span class="text-sm font-medium text-white block">JSON</span>
+                    <span class="text-[10px] text-zinc-500">{{ exportWithFakeData() ? 'Schema + données' : 'Tables et relations' }}</span>
+                </div>
+            </button>
+        </div>
+    </div>
+</aside>
+<!-- Overlay pour fermer au clic extérieur -->
+<div class="fixed inset-0 bg-black/30 z-[55]" (click)="exportPanelOpen.set(false)"></div>
+}
+
+<div class="absolute bottom-5 left-5 z-50 flex flex-col gap-3">
+    <div class="flex items-center gap-3">
+        <span class="text-[10px] text-zinc-400 font-mono w-10">{{ Math.round(zoomLevel() * 100) }}%</span>
+        <input type="range" min="50" max="200" [value]="Math.round(zoomLevel() * 100)"
+            (input)="setZoomFromSlider($any($event.target).value)"
+            class="zoom-slider w-28 appearance-none cursor-pointer">
+    </div>
+    <span class="text-[10px] text-zinc-600 select-none flex items-center gap-2">
+        @if (connectingFrom()) {
+        <span class="flex items-center gap-2">
+            <span class="text-amber-400">Type :</span>
+            <button type="button" (click)="connectingType.set('1:1')"
+                [class.bg-indigo-500]="connectingType() === '1:1'"
+                [class.text-white]="connectingType() === '1:1'"
+                [class.bg-zinc-800]="connectingType() !== '1:1'"
+                class="px-1.5 py-0.5 rounded text-[10px] font-medium hover:bg-zinc-700 transition-colors">1:1</button>
+            <button type="button" (click)="connectingType.set('1:N')"
+                [class.bg-indigo-500]="connectingType() === '1:N'"
+                [class.text-white]="connectingType() === '1:N'"
+                [class.bg-zinc-800]="connectingType() !== '1:N'"
+                class="px-1.5 py-0.5 rounded text-[10px] font-medium hover:bg-zinc-700 transition-colors">1:N</button>
+            <button type="button" (click)="connectingType.set('M:N')"
+                [class.bg-indigo-500]="connectingType() === 'M:N'"
+                [class.text-white]="connectingType() === 'M:N'"
+                [class.bg-zinc-800]="connectingType() !== 'M:N'"
+                class="px-1.5 py-0.5 rounded text-[10px] font-medium hover:bg-zinc-700 transition-colors">M:N</button>
+            <span class="text-zinc-500">·</span>
+            <span class="text-amber-400">Cliquez sur un point pour connecter · Échap pour annuler</span>
+        </span>
+        } @else {
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        Collaborative Mode · {{ tables().length }} Tables · {{ getValidRelationships().length }} Connections
+        }
+    </span>
+</div>
+}
