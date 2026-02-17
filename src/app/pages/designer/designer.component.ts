@@ -6,7 +6,7 @@ import { DragDropModule, CdkDragEnd } from '@angular/cdk/drag-drop';
 import { Auth } from '@angular/fire/auth';
 import { AuthService } from '../../services/auth.service';
 import { BoardService, type PresenceUser } from '../../services/board.service';
-import type { Table, Relationship, ConnectionSide } from '../../models/board.model';
+import type { Table, Relationship, ConnectionSide, Field, EnumDef } from '../../models/board.model';
 import { faker } from '@faker-js/faker';
 
 export type RelationshipType = '1:1' | '1:N' | 'M:N';
@@ -30,6 +30,7 @@ export class DesignerComponent implements OnInit, OnDestroy, AfterViewChecked {
   boardName = signal('Schema');
   tables = signal<Table[]>([]);
   relationships = signal<Relationship[]>([]);
+  enums = signal<{ name: string; values: string[] }[]>([]);
   selectedTableId = signal<string | null>(null);
   loading = signal(true);
   saving = signal(false);
@@ -64,7 +65,7 @@ export class DesignerComponent implements OnInit, OnDestroy, AfterViewChecked {
   private lastMouseX = 400;
   private lastMouseY = 300;
   private readonly MAX_UNDO = 10;
-  private undoStack: { name: string; tables: Table[]; relationships: Relationship[] }[] = [];
+  private undoStack: { name: string; tables: Table[]; relationships: Relationship[]; enums: { name: string; values: string[] }[] }[] = [];
   private updateCursorPosition: ((x: number, y: number) => void) | null = null;
   private unsubscribePresence: (() => void) | null = null;
   private unsubscribeBoard: (() => void) | null = null;
@@ -87,8 +88,15 @@ export class DesignerComponent implements OnInit, OnDestroy, AfterViewChecked {
       (board) => {
         if (board) {
           this.boardName.set(board.name);
-          this.tables.set(board.tables ?? []);
-          const tables = board.tables ?? [];
+          const boardEnums = board.enums ?? [];
+          const normalizedTables = (board.tables ?? []).map((t: Table) => ({
+            ...t,
+            fields: (t.fields ?? []).map((f: Field) => this.migrateField(f, boardEnums))
+          }));
+          this.tables.set(normalizedTables);
+          const migratedEnums = this.migrateEnumsFromFields(normalizedTables, boardEnums);
+          this.enums.set(migratedEnums);
+          const tables = normalizedTables;
           const tableIds = new Set(tables.map((t: Table) => t.id));
           const validRels = (board.relationships ?? [])
             .filter((r: Relationship) => tableIds.has(r.fromTableId) && tableIds.has(r.toTableId))
@@ -286,7 +294,7 @@ export class DesignerComponent implements OnInit, OnDestroy, AfterViewChecked {
       x: 300,
       y: 300,
       icon: 'solar:widget-add-linear',
-      fields: [{ id: `f-${Date.now()}`, name: 'id', type: 'UUID', isPrimary: true }]
+      fields: [{ id: `f-${Date.now()}`, name: 'id', type: 'string', isPrimary: true }]
     };
     this.tables.update(tabs => [...tabs, newTable]);
     this.selectedTableId.set(newId);
@@ -304,12 +312,99 @@ export class DesignerComponent implements OnInit, OnDestroy, AfterViewChecked {
       if (t.id === tableId) {
         return {
           ...t,
-          fields: [...t.fields, { id: `f-${Date.now()}`, name: 'new_field', type: 'String' }]
+          fields: [...t.fields, { id: `f-${Date.now()}`, name: 'new_field', type: 'string' }]
         };
       }
       return t;
     }));
     this.scheduleAutoSave();
+  }
+
+  onFieldTypeChange(field: Field) {
+    this.pushState();
+    if (field.type === 'enum' && !field.enumRef && this.enums().length) {
+      field.enumRef = this.enums()[0].name;
+    }
+    this.scheduleAutoSave();
+  }
+
+  getEnumValues(field: Field): string[] {
+    if (field.enumRef) {
+      const e = this.enums().find(x => x.name === field.enumRef);
+      return e?.values ?? [];
+    }
+    return field.enumValues ?? [];
+  }
+
+  addEnum(name: string) {
+    if (!name?.trim()) return;
+    const n = name.trim();
+    if (this.enums().some(e => e.name === n)) return;
+    this.pushState();
+    this.enums.update(es => [...es, { name: n, values: [] }]);
+    this.scheduleAutoSave();
+  }
+
+  removeEnum(name: string) {
+    this.pushState();
+    this.enums.update(es => es.filter(e => e.name !== name));
+    this.tables.update(tabs => tabs.map(t => ({
+      ...t,
+      fields: t.fields.map(f => f.type === 'enum' && f.enumRef === name ? { ...f, enumRef: undefined } : f)
+    })));
+    this.scheduleAutoSave();
+  }
+
+  addEnumValue(enumName: string, inputEl: HTMLInputElement) {
+    const val = inputEl?.value?.trim();
+    if (!val) return;
+    this.pushState();
+    this.enums.update(es => es.map(e =>
+      e.name === enumName ? { ...e, values: [...e.values, val] } : e
+    ));
+    if (inputEl) inputEl.value = '';
+    this.scheduleAutoSave();
+  }
+
+  removeEnumValue(enumName: string, index: number) {
+    this.pushState();
+    this.enums.update(es => es.map(e =>
+      e.name === enumName ? { ...e, values: e.values.filter((_, i) => i !== index) } : e
+    ));
+    this.scheduleAutoSave();
+  }
+
+  private normalizeFieldType(type: string): string {
+    const valid = ['string', 'number', 'integer', 'boolean', 'text', 'date', 'timestamp', 'json', 'uuid', 'enum', 'Relation'];
+    if (valid.includes(type)) return type;
+    if (['UUID', 'String'].includes(type)) return 'string';
+    if (type === 'Money') return 'number';
+    if (type === 'Enum') return 'enum';
+    return 'string';
+  }
+
+  private migrateField(f: Field, boardEnums: EnumDef[]): Field {
+    const type = this.normalizeFieldType(f.type);
+    if (type === 'enum') {
+      if (f.enumRef && boardEnums.some(e => e.name === f.enumRef)) return { ...f, type };
+      if (f.enumValues?.length) {
+        const enumName = `enum_${f.id}`.replace(/-/g, '_');
+        return { ...f, type, enumRef: enumName };
+      }
+      return { ...f, type };
+    }
+    return { ...f, type };
+  }
+
+  private migrateEnumsFromFields(tables: Table[], boardEnums: EnumDef[]): EnumDef[] {
+    const byName = new Map<string, string[]>();
+    boardEnums.forEach(e => byName.set(e.name, [...e.values]));
+    tables.forEach(t => (t.fields || []).forEach(f => {
+      if (f.type === 'enum' && f.enumRef && f.enumValues?.length && !byName.has(f.enumRef)) {
+        byName.set(f.enumRef, f.enumValues);
+      }
+    }));
+    return Array.from(byName.entries()).map(([name, values]) => ({ name, values }));
   }
 
   removeTable(id: string) {
@@ -346,7 +441,21 @@ export class DesignerComponent implements OnInit, OnDestroy, AfterViewChecked {
       sql += `-- Table: ${table.name}\n`;
       sql += `CREATE TABLE ${table.name.toLowerCase()} (\n`;
       const fields = table.fields.map(f => {
-        let type = f.type === 'UUID' ? 'UUID' : f.type === 'String' ? 'VARCHAR(255)' : f.type === 'Money' ? 'DECIMAL(10,2)' : 'TEXT';
+        let type = 'TEXT';
+        if (f.type === 'string' || f.type === 'String') type = 'VARCHAR(255)';
+        else if (f.type === 'number' || f.type === 'Money') type = 'DECIMAL(10,2)';
+        else if (f.type === 'integer') type = 'BIGINT';
+        else if (f.type === 'boolean') type = 'BOOLEAN';
+        else if (f.type === 'text') type = 'TEXT';
+        else if (f.type === 'date') type = 'DATE';
+        else if (f.type === 'timestamp') type = 'TIMESTAMP';
+        else if (f.type === 'json') type = 'JSONB';
+        else if (f.type === 'uuid') type = 'UUID';
+        else if (f.type === 'enum' || f.type === 'Enum') {
+          const vals = this.getEnumValues(f);
+          const sqlVals = vals.length ? vals.map(v => `'${String(v).replace(/'/g, "''")}'`).join(', ') : "'value'";
+          type = `ENUM(${sqlVals})`;
+        }
         return `  ${f.name.toLowerCase()} ${type}${f.isPrimary ? ' PRIMARY KEY' : ''}`;
       });
       sql += fields.join(',\n');
@@ -393,13 +502,23 @@ export class DesignerComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.downloadFile(JSON.stringify(payload, null, 2), 'schema.json');
   }
 
-  private generateFakeValue(field: { type: string; faker?: string; name: string }): unknown {
+  private generateFakeValue(field: Field): unknown {
     const hint = (field.faker || field.type || '').toLowerCase();
 
-    if (field.type === 'UUID') return faker.string.uuid();
-    if (field.type === 'Money') return parseFloat(faker.commerce.price({ min: 0, max: 10000 }));
-
-    if (field.type === 'String' || field.type === 'Enum') {
+    if (field.type === 'enum' || field.type === 'Enum') {
+      const vals = this.getEnumValues(field);
+      if (vals.length) return faker.helpers.arrayElement(vals);
+      return 'value';
+    }
+    if (field.type === 'boolean') return faker.datatype.boolean();
+    if (field.type === 'number' || field.type === 'Money') return parseFloat(faker.commerce.price({ min: 0, max: 10000 }));
+    if (field.type === 'integer') return faker.number.int({ min: 1, max: 999999 });
+    if (field.type === 'date') return faker.date.past().toISOString().slice(0, 10);
+    if (field.type === 'timestamp') return faker.date.recent().toISOString();
+    if (field.type === 'json') return JSON.stringify({ id: faker.string.uuid(), value: faker.lorem.word() });
+    if (field.type === 'uuid') return faker.string.uuid();
+    if (field.type === 'text') return faker.lorem.sentence();
+    if (field.type === 'string' || field.type === 'String') {
       if (hint.includes('email')) return faker.internet.email();
       if (hint.includes('name') && hint.includes('person')) return faker.person.fullName();
       if (hint.includes('name') || hint.includes('first')) return faker.person.firstName();
@@ -716,7 +835,8 @@ export class DesignerComponent implements OnInit, OnDestroy, AfterViewChecked {
     const snapshot = {
       name: this.boardName(),
       tables: JSON.parse(JSON.stringify(this.tables())),
-      relationships: JSON.parse(JSON.stringify(this.relationships()))
+      relationships: JSON.parse(JSON.stringify(this.relationships())),
+      enums: JSON.parse(JSON.stringify(this.enums()))
     };
     this.undoStack.push(snapshot);
     if (this.undoStack.length > this.MAX_UNDO) {
@@ -730,6 +850,7 @@ export class DesignerComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.boardName.set(prev.name);
     this.tables.set(prev.tables);
     this.relationships.set(prev.relationships);
+    this.enums.set(prev.enums ?? []);
     this.scheduleAutoSave();
   }
 
@@ -812,7 +933,8 @@ export class DesignerComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.boardService.updateBoard(id, {
       name: this.boardName(),
       tables: this.tables(),
-      relationships: this.relationships()
+      relationships: this.relationships(),
+      enums: this.enums()
     }).subscribe({
       next: () => this.saving.set(false),
       error: () => this.saving.set(false)

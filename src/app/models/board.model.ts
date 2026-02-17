@@ -4,6 +4,16 @@ export interface Field {
   type: string;
   faker?: string;
   isPrimary?: boolean;
+  /** Référence à un enum nommé du board (quand type === 'enum') */
+  enumRef?: string;
+  /** @deprecated Utiliser enumRef + enums du board. Conservé pour migration. */
+  enumValues?: string[];
+}
+
+/** Enum nommé réutilisable par toutes les tables du board */
+export interface EnumDef {
+  name: string;
+  values: string[];
 }
 
 export interface Table {
@@ -29,6 +39,8 @@ export interface Relationship {
 export interface BoardData {
   tables: Table[];
   relationships: Relationship[];
+  /** Enums nommés réutilisables par toutes les tables */
+  enums?: EnumDef[];
 }
 
 export interface Board extends BoardData {

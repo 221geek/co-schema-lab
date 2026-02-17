@@ -266,11 +266,15 @@
                         <span [class]="'text-[10px] px-1.5 py-0.5 rounded font-medium ' + 
                   (field.isPrimary ? 'text-yellow-500 bg-yellow-500/10' : 
                    field.type === 'Relation' ? 'text-indigo-400 bg-indigo-500/10 border border-indigo-500/20' :
-                   field.type === 'UUID' ? 'text-yellow-500 bg-yellow-500/10' :
-                   field.type === 'Money' ? 'text-emerald-400 bg-emerald-500/10' :
-                   field.type === 'Enum' ? 'text-purple-400 bg-purple-500/10' :
+                   field.type === 'number' || field.type === 'integer' ? 'text-emerald-400 bg-emerald-500/10' :
+                   field.type === 'boolean' ? 'text-amber-400 bg-amber-500/10' :
+                   field.type === 'text' ? 'text-cyan-400 bg-cyan-500/10' :
+                   field.type === 'date' || field.type === 'timestamp' ? 'text-orange-400 bg-orange-500/10' :
+                   field.type === 'json' ? 'text-pink-400 bg-pink-500/10' :
+                   field.type === 'uuid' ? 'text-yellow-500 bg-yellow-500/10' :
+                   field.type === 'enum' ? 'text-purple-400 bg-purple-500/10' :
                    'text-blue-400 bg-blue-500/10')">
-                            {{ field.faker || field.type }}
+                            {{ field.type === 'enum' ? (getEnumValues(field).length ? getEnumValues(field).join(', ') : (field.enumRef || 'enum')) : (field.faker || field.type) }}
                         </span>
                     </div>
                     }
@@ -298,6 +302,50 @@
 
         <div class="space-y-4">
             <div>
+                <label class="text-[10px] uppercase font-bold text-zinc-500 tracking-widest mb-3 block">Enums (réutilisables)</label>
+                <div class="space-y-2 mb-4 max-h-[200px] overflow-y-auto pr-2">
+                    @for (e of enums(); track e.name) {
+                    <div class="p-2 bg-[#1c1c1f]/50 border border-[#27272a] rounded-md">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs font-mono text-purple-400">{{ e.name }}</span>
+                            <button type="button" (click)="removeEnum(e.name)" class="text-zinc-500 hover:text-red-400 text-[10px]">
+                                <iconify-icon icon="solar:trash-bin-trash-linear"></iconify-icon>
+                            </button>
+                        </div>
+                        <div class="flex flex-wrap gap-1 mb-1">
+                            @for (val of e.values; track $index) {
+                            <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 text-[10px]">
+                                {{ val }}
+                                <button type="button" (click)="removeEnumValue(e.name, $index)" class="hover:text-red-400">
+                                    <iconify-icon icon="solar:close-circle-linear" class="text-[10px]"></iconify-icon>
+                                </button>
+                            </span>
+                            }
+                        </div>
+                        <div class="flex gap-1">
+                            <input type="text" #enumVal [id]="'enum-val-' + e.name" placeholder="+ valeur"
+                                class="flex-1 bg-[#27272a] border border-zinc-700 rounded px-1.5 py-0.5 text-[10px] text-white placeholder-zinc-500 focus:border-indigo-500 outline-none"
+                                (keydown.enter)="addEnumValue(e.name, enumVal); $event.preventDefault()">
+                            <button type="button" (click)="addEnumValue(e.name, enumVal)"
+                                class="px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 text-[10px]">
+                                <iconify-icon icon="solar:add-circle-linear"></iconify-icon>
+                            </button>
+                        </div>
+                    </div>
+                    }
+                </div>
+                <div class="flex gap-1">
+                    <input type="text" #newEnumName placeholder="Nom du nouvel enum"
+                        class="flex-1 bg-[#27272a] border border-zinc-700 rounded px-2 py-1 text-[10px] text-white placeholder-zinc-500 focus:border-indigo-500 outline-none"
+                        (keydown.enter)="addEnum(newEnumName.value); newEnumName.value = ''; $event.preventDefault()">
+                    <button type="button" (click)="addEnum(newEnumName.value); newEnumName.value = ''"
+                        class="px-2 py-1 rounded bg-purple-500/20 text-purple-400 text-[10px] hover:bg-purple-500/30">
+                        <iconify-icon icon="solar:add-circle-linear"></iconify-icon>
+                    </button>
+                </div>
+            </div>
+
+            <div>
                 <label class="text-[10px] uppercase font-bold text-zinc-500 tracking-widest mb-1.5 block">Table
                     Name</label>
                 <input type="text" [(ngModel)]="sTable.name" (focus)="pushState()" (ngModelChange)="scheduleAutoSave()"
@@ -316,14 +364,38 @@
                             <iconify-icon icon="solar:settings-linear"
                                 class="text-zinc-600 group-hover:text-zinc-400 cursor-pointer"></iconify-icon>
                         </div>
-                        <div class="flex gap-2">
-                            <select [(ngModel)]="field.type" (focus)="pushState()" (ngModelChange)="scheduleAutoSave()"
-                                class="bg-[#27272a] border-none text-[10px] text-zinc-400 rounded px-1.5 py-0.5 outline-none">
-                                <option value="UUID">UUID</option>
-                                <option value="String">String</option>
-                                <option value="Money">Money</option>
-                                <option value="Enum">Enum</option>
+                        <div class="flex flex-col gap-2">
+                            @if (field.type === 'Relation') {
+                            <span class="text-[10px] text-indigo-400">Relation (clé étrangère)</span>
+                            } @else {
+                            <select [(ngModel)]="field.type" (focus)="pushState()" (ngModelChange)="onFieldTypeChange(field)"
+                                class="bg-[#27272a] border-none text-[10px] text-zinc-400 rounded px-1.5 py-0.5 outline-none w-fit">
+                                <option value="string">String</option>
+                                <option value="number">Number</option>
+                                <option value="integer">Integer</option>
+                                <option value="boolean">Boolean</option>
+                                <option value="text">Text</option>
+                                <option value="date">Date</option>
+                                <option value="timestamp">Timestamp</option>
+                                <option value="json">JSON</option>
+                                <option value="uuid">UUID</option>
+                                <option value="enum">Enum</option>
                             </select>
+                            @if (field.type === 'enum') {
+                            <div class="mt-1">
+                                <label class="text-[10px] text-zinc-500 mb-1 block">Enum</label>
+                                <select [(ngModel)]="field.enumRef" (ngModelChange)="scheduleAutoSave()"
+                                    class="w-full bg-[#27272a] border border-zinc-700 rounded px-2 py-1 text-[10px] text-white focus:border-indigo-500 outline-none">
+                                    @for (e of enums(); track e.name) {
+                                    <option [value]="e.name">{{ e.name }} ({{ e.values.length }} valeurs)</option>
+                                    }
+                                    @if (enums().length === 0) {
+                                    <option value="" disabled>Créez un enum ci-dessous</option>
+                                    }
+                                </select>
+                            </div>
+                            }
+                            }
                         </div>
                     </div>
                     }

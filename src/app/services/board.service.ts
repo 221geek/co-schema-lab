@@ -2,7 +2,6 @@ import { Injectable, inject } from '@angular/core';
 import {
   Firestore,
   collection,
-  collectionData,
   doc,
   addDoc,
   updateDoc,
@@ -16,7 +15,7 @@ import {
   arrayUnion
 } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
-import { Observable, from, map, switchMap } from 'rxjs';
+import { Observable, from, map, switchMap, shareReplay, catchError, of } from 'rxjs';
 import type { User } from 'firebase/auth';
 
 export interface PresenceUser {
@@ -45,9 +44,9 @@ export class BoardService {
 
   private get currentUserId$() {
     return authState(this.auth).pipe(
-      filter((u) => !!u),
+      filter((u): u is NonNullable<typeof u> => !!u),
       take(1),
-      map((u) => u!.uid)
+      map((u) => u.uid)
     );
   }
 
@@ -55,7 +54,20 @@ export class BoardService {
     return this.currentUserId$.pipe(
       switchMap((userId) => {
         const q = query(this.boardsCollection, where('users', 'array-contains', userId));
-        return collectionData(q, { idField: 'id' });
+        return new Observable<Board[]>((sub) => {
+          const unsub = onSnapshot(
+            q,
+            (snap) => {
+              const list = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Board & { id: string }));
+              sub.next(list);
+            },
+            (err) => {
+              console.error('getBoards Firestore error:', err);
+              sub.next([]);
+            }
+          );
+          return () => unsub();
+        });
       }),
       map((boards) => {
         const list = boards as (Board & { id: string })[];
@@ -66,7 +78,8 @@ export class BoardService {
               : v instanceof Date ? v : new Date(0);
           return toDate(b.updatedAt).getTime() - toDate(a.updatedAt).getTime();
         });
-      })
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
     );
   }
 
@@ -118,9 +131,10 @@ export class BoardService {
             x: 100,
             y: 100,
             icon: 'solar:widget-add-linear',
-            fields: [{ id: 'f-1', name: 'id', type: 'UUID', isPrimary: true }]
+            fields: [{ id: 'f-1', name: 'id', type: 'string', isPrimary: true }]
           }],
           relationships: data?.relationships ?? [],
+          enums: data?.enums ?? [],
           createdAt: now,
           updatedAt: now,
           createdBy: userId
