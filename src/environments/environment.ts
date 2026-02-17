@@ -8,5 +8,7 @@ export const environment = {
     messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
     appId: 'YOUR_APP_ID',
     measurementId: 'G-XXXXXXXXXX'
-  }
+  },
+  /** Optional: reCAPTCHA v3 site key for Firebase App Check. Leave empty to disable. */
+  recaptchaSiteKey: ''
 };

@@ -64,24 +64,36 @@ npm install --include=dev
 1. Create a project on [Firebase Console](https://console.firebase.google.com/)
 2. Enable **Authentication** (Email/Password)
 3. Create a **Firestore** database
-4. Copy the configuration into `src/environments/environment.ts`:
+4. Copy your project configuration into both environment files:
+   - `src/environments/environment.ts` (development)
+   - `src/environments/environment.prod.ts` (production)
+
+   Replace the placeholders with your Firebase config:
 
 ```ts
 export const environment = {
-  production: false,
+  production: false, // use true in environment.prod.ts
   firebase: {
-    apiKey: '...',
-    authDomain: '...',
-    projectId: '...',
-    storageBucket: '...',
-    messagingSenderId: '...',
-    appId: '...',
-    measurementId: '...'
-  }
+    apiKey: 'YOUR_API_KEY',
+    authDomain: 'YOUR_PROJECT_ID.firebaseapp.com',
+    projectId: 'YOUR_PROJECT_ID',
+    storageBucket: 'YOUR_PROJECT_ID.firebasestorage.app',
+    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
+    appId: 'YOUR_APP_ID',
+    measurementId: 'G-XXXXXXXXXX'
+  },
+  recaptchaSiteKey: '' // optional, for App Check
 };
 ```
 
 5. Deploy Firestore rules: `firebase deploy --only firestore`
+
+### Securing your deployment
+
+For production, consider:
+
+- **API key restrictions** – In [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Credentials, restrict your Firebase API key to HTTP referrers (e.g. `https://your-domain.com/*`) to limit abuse.
+- **Firebase App Check** – Add a reCAPTCHA v3 site key in `recaptchaSiteKey` and enable App Check in Firebase Console to protect Firestore from unauthorized clients.
 
 ## Development
 
