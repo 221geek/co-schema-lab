@@ -1,6 +1,6 @@
 # CoSchemaLab
 
-Application web collaborative pour concevoir des schémas de base de données en temps réel. Créez des tables, définissez des relations (1:1, 1:N, M:N) et exportez votre schéma en SQL ou JSON avec des données de test générées.
+Collaborative web application for designing database schemas in real time. Create tables, define relationships (1:1, 1:N, M:N), and export your schema to SQL or JSON with generated test data.
 
 ![Angular](https://img.shields.io/badge/Angular-20-DD0031?logo=angular)
 ![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%7C%20Auth-FFCA28?logo=firebase)
@@ -8,61 +8,61 @@ Application web collaborative pour concevoir des schémas de base de données en
 
 ---
 
-> **Concevez vos schémas de BDD à plusieurs, en direct.**  
-> Plus de specs figées dans des docs : dessinez ensemble, partagez le lien, et exportez en un clic. Du schéma au SQL ou JSON avec données de test — sans quitter le navigateur.
+> **Design your database schemas together, in real time.**  
+> No more specs stuck in docs: draw together, share the link, and export in one click. From schema to SQL or JSON with test data — without leaving the browser.
 
 ---
 
-## Fonctionnalités
+## Features
 
-### Designer de schéma
-- **Tables** : Créez des tables avec colonnes (UUID, String, Money, Enum, Relation)
-- **Relations** : Connectez les tables avec des points de connexion sur chaque côté
-- **Cardinalités** : One-to-One (1:1), One-to-Many (1:N), Many-to-Many (M:N)
-- **Direction** : Visualisation de la direction des relations (flèches + badges)
-- **Édition inline** : Modifiez type et direction directement depuis le badge sur la ligne
+### Schema designer
+- **Tables**: Create tables with columns (UUID, String, Money, Enum, Relation)
+- **Relationships**: Connect tables with connection points on each side
+- **Cardinalities**: One-to-One (1:1), One-to-Many (1:N), Many-to-Many (M:N)
+- **Direction**: Visualization of relationship direction (arrows + badges)
+- **Inline editing**: Edit type and direction directly from the badge on the line
 
-### Collaboration en temps réel
-- Synchronisation instantanée via Firestore
-- Présence des collaborateurs connectés
-- Curseurs à distance sur le canvas
+### Real-time collaboration
+- Instant sync via Firestore
+- Presence of connected collaborators
+- Remote cursors on the canvas
 
 ### Export
-- **SQL** : Script `CREATE TABLE` + optionnellement des `INSERT` avec données
-- **JSON** : Schéma (tables, relations) + optionnellement des données
-- **Données factices** : Génération via [Faker.js](https://fakerjs.dev/) (emails, noms, prix, etc.)
-- Nombre de lignes configurable par table
+- **SQL**: `CREATE TABLE` script + optional `INSERT` statements with data
+- **JSON**: Schema (tables, relationships) + optional data
+- **Fake data**: Generated via [Faker.js](https://fakerjs.dev/) (emails, names, prices, etc.)
+- Configurable row count per table
 
-### Autres
-- Zoom et pan sur le canvas
-- Annulation (Ctrl/Cmd + Z)
-- Partage de lien pour inviter des collaborateurs
-- Authentification Firebase (login, signup)
+### Other
+- Zoom and pan on the canvas
+- Undo (Ctrl/Cmd + Z)
+- Link sharing to invite collaborators
+- Firebase authentication (login, signup)
 
-## Prérequis
+## Prerequisites
 
 - Node.js 18+
-- Compte Firebase
+- Firebase account
 
 ## Installation
 
 ```bash
-# Cloner le dépôt
-git clone <url-du-repo>
+# Clone the repository
+git clone <repo-url>
 cd CoSchemaLab_front
 
-# Installer les dépendances
+# Install dependencies
 npm install --include=dev
 
-# Configurer Firebase (voir section ci-dessous)
+# Configure Firebase (see section below)
 ```
 
-## Configuration Firebase
+## Firebase configuration
 
-1. Créez un projet sur [Firebase Console](https://console.firebase.google.com/)
-2. Activez **Authentication** (Email/Password)
-3. Créez une base **Firestore**
-4. Copiez la configuration dans `src/environments/environment.ts` :
+1. Create a project on [Firebase Console](https://console.firebase.google.com/)
+2. Enable **Authentication** (Email/Password)
+3. Create a **Firestore** database
+4. Copy the configuration into `src/environments/environment.ts`:
 
 ```ts
 export const environment = {
@@ -79,15 +79,15 @@ export const environment = {
 };
 ```
 
-5. Déployez les règles Firestore : `firebase deploy --only firestore`
+5. Deploy Firestore rules: `firebase deploy --only firestore`
 
-## Développement
+## Development
 
 ```bash
 npm start
 ```
 
-Ouvre [http://localhost:4200](http://localhost:4200).
+Opens [http://localhost:4200](http://localhost:4200).
 
 ## Build
 
@@ -95,42 +95,42 @@ Ouvre [http://localhost:4200](http://localhost:4200).
 npm run build
 ```
 
-Les fichiers sont générés dans `dist/CoSchemaLab_front/`.
+Output is generated in `dist/CoSchemaLab_front/`.
 
-## Structure du projet
+## Project structure
 
 ```
 src/
 ├── app/
-│   ├── models/          # Modèles (Table, Field, Relationship)
+│   ├── models/          # Models (Table, Field, Relationship)
 │   ├── pages/
-│   │   ├── login/       # Connexion
-│   │   ├── signup/      # Inscription
-│   │   ├── boards/      # Liste des boards
-│   │   └── designer/    # Éditeur de schéma
+│   │   ├── login/       # Login
+│   │   ├── signup/      # Sign up
+│   │   ├── boards/      # Board list
+│   │   └── designer/    # Schema editor
 │   └── services/
 │       ├── auth.service.ts
-│       └── board.service.ts  # Firestore, présence
-├── environments/        # Config Firebase
+│       └── board.service.ts  # Firestore, presence
+├── environments/        # Firebase config
 └── styles.scss
 ```
 
-## Raccourcis
+## Shortcuts
 
-| Raccourci | Action |
-|-----------|--------|
-| Ctrl/Cmd + Z | Annuler |
-| Échap | Annuler la création de relation |
-| Molette + Ctrl/Cmd | Zoom |
+| Shortcut | Action |
+|----------|--------|
+| Ctrl/Cmd + Z | Undo |
+| Escape | Cancel relationship creation |
+| Scroll + Ctrl/Cmd | Zoom |
 
 ## Technologies
 
 - **Angular 20** – Framework
-- **Firebase** – Auth, Firestore, présence
-- **Tailwind CSS** – Styles
-- **@faker-js/faker** – Génération de données
+- **Firebase** – Auth, Firestore, presence
+- **Tailwind CSS** – Styling
+- **@faker-js/faker** – Data generation
 - **Angular CDK** – Drag & drop
 
-## Licence
+## License
 
 Private
