@@ -88,6 +88,21 @@ export const environment = {
 
 5. Deploy Firestore rules: `firebase deploy --only firestore`
 
+### Deployment (Railway, Vercel, etc.)
+
+Set these environment variables in your deployment platform. The build will inject them into `environment.prod.ts`:
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `FIREBASE_API_KEY` | Yes | Firebase API key |
+| `FIREBASE_PROJECT_ID` | Yes | Firebase project ID |
+| `FIREBASE_MESSAGING_SENDER_ID` | Yes | Messaging sender ID |
+| `FIREBASE_APP_ID` | Yes | Firebase app ID |
+| `FIREBASE_AUTH_DOMAIN` | No | Defaults to `{projectId}.firebaseapp.com` |
+| `FIREBASE_STORAGE_BUCKET` | No | Defaults to `{projectId}.firebasestorage.app` |
+| `FIREBASE_MEASUREMENT_ID` | No | Analytics measurement ID |
+| `RECAPTCHA_SITE_KEY` | No | reCAPTCHA v3 site key for App Check |
+
 ### Securing your deployment
 
 For production, consider:
