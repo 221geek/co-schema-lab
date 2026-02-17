@@ -262,7 +262,8 @@
                         } @else {
                         <div class="w-3 h-3 border border-[#3f3f46] rounded-sm"></div>
                         }
-                        <span class="text-xs text-zinc-200 font-mono flex-1">{{ field.name }}</span>
+                        <input type="text" [(ngModel)]="field.name" (focus)="pushState()" (ngModelChange)="scheduleAutoSave()" (click)="$event.stopPropagation()"
+                            class="flex-1 min-w-0 bg-transparent border-none text-xs font-mono text-zinc-200 focus:outline-none focus:ring-0 p-0">
                         <span [class]="'text-[10px] px-1.5 py-0.5 rounded font-medium ' + 
                   (field.isPrimary ? 'text-yellow-500 bg-yellow-500/10' : 
                    field.type === 'Relation' ? 'text-indigo-400 bg-indigo-500/10 border border-indigo-500/20' :
