@@ -1,0 +1,423 @@
+<div class="landing-page min-h-screen flex flex-col selection:bg-indigo-500/30">
+  <!-- Navigation -->
+  <header class="fixed top-0 w-full border-b border-zinc-800/60 bg-zinc-950/80 backdrop-blur-md z-50">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <a routerLink="/" class="flex items-center gap-2">
+        <img src="Coschemalab.png" alt="CoSchemaLab" class="h-8 md:h-9 w-auto" />
+      </a>
+
+      <nav class="hidden md:flex items-center gap-8">
+        <a href="#features" class="text-sm font-medium text-zinc-400 hover:text-white transition-colors">Features</a>
+        <a href="#exports" class="text-sm font-medium text-zinc-400 hover:text-white transition-colors">Exports</a>
+        <a href="#mock-data" class="text-sm font-medium text-zinc-400 hover:text-white transition-colors">Mock Data</a>
+        <a href="https://github.com/221geek/co-schema-lab" target="_blank" rel="noopener" class="text-sm font-medium text-zinc-400 hover:text-white transition-colors">GitHub</a>
+      </nav>
+
+      <div class="flex items-center gap-4">
+        <a routerLink="/login" class="px-4 py-2 bg-white text-zinc-950 text-xs font-semibold rounded-full hover:bg-zinc-200 transition-colors shadow-lg shadow-white/5 flex items-center gap-2">
+          Launch Editor
+          <iconify-icon icon="solar:arrow-right-linear" class="text-sm"></iconify-icon>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 relative pt-32">
+    <div class="absolute inset-0 grid-bg pointer-events-none z-0"></div>
+    <div class="absolute top-0 left-0 right-0 h-[800px] hero-glow pointer-events-none z-0"></div>
+
+    <!-- Hero Section -->
+    <section class="relative z-10 max-w-7xl mx-auto px-6 flex flex-col items-center text-center pb-32">
+      <a href="https://github.com/221geek/co-schema-lab" target="_blank" rel="noopener" class="mb-8 inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-800 bg-zinc-900/50 text-zinc-400 text-xs font-medium hover:border-zinc-700 hover:text-white transition-colors cursor-pointer group">
+        <span class="flex h-2 w-2 relative">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+        </span>
+        New: Prisma &amp; TypeORM Export Support
+        <iconify-icon icon="solar:arrow-right-linear" class="group-hover:translate-x-0.5 transition-transform"></iconify-icon>
+      </a>
+
+      <h1 class="max-w-5xl text-5xl md:text-7xl font-semibold tracking-tight text-white mb-8 leading-[1.1]">
+        Design schemas, <br>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-violet-400 to-indigo-300">Generate code instantly.</span>
+      </h1>
+
+      <p class="max-w-2xl text-lg text-zinc-400 mb-10 leading-relaxed">
+        The open-source visual editor for modern database modeling. Collaborate in real-time, generate massive datasets, and export to SQL, JSON, Prisma, or TypeORM.
+      </p>
+
+      <div class="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+        <a routerLink="/login" class="w-full sm:w-auto px-8 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full text-sm font-semibold transition-all shadow-xl shadow-indigo-500/20 flex items-center justify-center gap-2">
+          Start Designing Free
+        </a>
+        <a href="https://github.com/221geek/co-schema-lab" target="_blank" rel="noopener" class="w-full sm:w-auto px-8 py-3.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-white rounded-full text-sm font-semibold transition-all flex items-center justify-center gap-2">
+          <iconify-icon icon="solar:star-linear" class="text-zinc-400"></iconify-icon>
+          Star on GitHub
+        </a>
+      </div>
+
+      <!-- Hero Graphic -->
+      <div class="mt-20 w-full max-w-6xl relative">
+        <div class="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl opacity-20 blur-xl"></div>
+        <div class="relative rounded-xl border border-zinc-800 bg-zinc-900 shadow-2xl overflow-hidden aspect-[16/9] md:aspect-[2/1]">
+          <div class="h-10 border-b border-zinc-800 bg-zinc-950 flex items-center justify-between px-4">
+            <div class="flex gap-2">
+              <div class="w-2.5 h-2.5 rounded-full bg-red-500/20 border border-red-500/50"></div>
+              <div class="w-2.5 h-2.5 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>
+              <div class="w-2.5 h-2.5 rounded-full bg-green-500/20 border border-green-500/50"></div>
+            </div>
+            <div class="flex items-center gap-4 text-xs font-medium text-zinc-500">
+              <span class="hover:text-zinc-300 cursor-pointer">File</span>
+              <span class="hover:text-zinc-300 cursor-pointer">Edit</span>
+              <span class="hover:text-zinc-300 cursor-pointer">View</span>
+            </div>
+          </div>
+          <div class="w-full h-full bg-[#0c0c0e] relative overflow-auto">
+            <div class="absolute inset-0 z-0" style="background-image: radial-gradient(#27272a 1px, transparent 1px); background-size: 24px 24px; opacity: 0.3;"></div>
+            <div class="relative w-full h-full min-w-[800px] min-h-[400px] mx-auto z-10">
+              <svg class="absolute inset-0 w-full h-full pointer-events-none z-0">
+                <path d="M 336 110 C 390 110, 390 200, 450 200" stroke="#6366f1" stroke-width="2" fill="none" class="drop-shadow-lg"></path>
+                <circle cx="450" cy="200" r="4" fill="#6366f1"></circle>
+                <circle cx="336" cy="110" r="4" fill="#6366f1"></circle>
+              </svg>
+              <div class="absolute top-10 left-20 w-64 glass-card rounded-lg shadow-2xl border-l-4 border-l-indigo-500 animate-float" style="z-index: 10;">
+                <div class="p-3 border-b border-zinc-800/50 flex justify-between items-center bg-zinc-900/50">
+                  <span class="text-sm font-semibold text-white">Users</span>
+                  <iconify-icon icon="solar:menu-dots-bold" class="text-zinc-500"></iconify-icon>
+                </div>
+                <div class="p-2 space-y-0.5 bg-zinc-900/30">
+                  <div class="flex justify-between px-2 py-1.5 rounded bg-indigo-500/10"><span class="text-xs text-indigo-300 font-mono">id</span> <span class="text-[10px] uppercase font-bold text-zinc-500">UUID</span></div>
+                  <div class="flex justify-between px-2 py-1.5 rounded hover:bg-zinc-800/50"><span class="text-xs text-zinc-300 font-mono">email</span> <span class="text-[10px] uppercase font-bold text-zinc-500">VARCHAR</span></div>
+                  <div class="flex justify-between px-2 py-1.5 rounded hover:bg-zinc-800/50"><span class="text-xs text-zinc-300 font-mono">password</span> <span class="text-[10px] uppercase font-bold text-zinc-500">VARCHAR</span></div>
+                </div>
+              </div>
+              <div class="absolute top-32 left-[450px] w-64 glass-card rounded-lg shadow-2xl border-l-4 border-l-emerald-500 animate-float" style="animation-delay: 1.5s; z-index: 10;">
+                <div class="p-3 border-b border-zinc-800/50 flex justify-between items-center bg-zinc-900/50">
+                  <span class="text-sm font-semibold text-white">Posts</span>
+                  <iconify-icon icon="solar:menu-dots-bold" class="text-zinc-500"></iconify-icon>
+                </div>
+                <div class="p-2 space-y-0.5 bg-zinc-900/30">
+                  <div class="flex justify-between px-2 py-1.5 rounded hover:bg-zinc-800/50"><span class="text-xs text-zinc-300 font-mono">id</span> <span class="text-[10px] uppercase font-bold text-zinc-500">UUID</span></div>
+                  <div class="flex justify-between px-2 py-1.5 rounded hover:bg-zinc-800/50"><span class="text-xs text-zinc-300 font-mono">title</span> <span class="text-[10px] uppercase font-bold text-zinc-500">TEXT</span></div>
+                  <div class="flex justify-between px-2 py-1.5 rounded bg-indigo-500/10"><span class="text-xs text-indigo-300 font-mono">authorId</span> <span class="text-[10px] uppercase font-bold text-zinc-500">FK</span></div>
+                  <div class="flex justify-between px-2 py-1.5 rounded hover:bg-zinc-800/50"><span class="text-xs text-zinc-300 font-mono">published</span> <span class="text-[10px] uppercase font-bold text-zinc-500">BOOL</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tech Stack Scroller -->
+    <section class="border-y border-zinc-900 bg-zinc-950/50 py-10">
+      <div class="max-w-7xl mx-auto px-6 text-center">
+        <p class="text-sm text-zinc-500 font-medium mb-6">POWERFUL EXPORTS TO MODERN STACKS</p>
+        <div class="flex flex-wrap justify-center gap-8 md:gap-16 opacity-70 grayscale hover:grayscale-0 transition-all duration-500">
+          <div class="flex items-center gap-2">
+            <iconify-icon icon="simple-icons:prisma" class="text-white text-xl"></iconify-icon>
+            <span class="text-lg font-bold text-white tracking-tight">Prisma</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <iconify-icon icon="simple-icons:typeorm" class="text-orange-500 text-xl"></iconify-icon>
+            <span class="text-lg font-bold text-zinc-300 tracking-tight">TypeORM</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <iconify-icon icon="simple-icons:postgresql" class="text-blue-400 text-xl"></iconify-icon>
+            <span class="text-lg font-bold text-zinc-300 tracking-tight">PostgreSQL</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <iconify-icon icon="simple-icons:mysql" class="text-blue-500 text-xl"></iconify-icon>
+            <span class="text-lg font-bold text-zinc-300 tracking-tight">MySQL</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <iconify-icon icon="simple-icons:json" class="text-yellow-500 text-xl"></iconify-icon>
+            <span class="text-lg font-bold text-zinc-300 tracking-tight">JSON</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Feature 1: Export -->
+    <section id="exports" class="py-32 relative">
+      <div class="max-w-7xl mx-auto px-6">
+        <div class="flex flex-col lg:flex-row items-center gap-16">
+          <div class="w-full lg:w-1/2 space-y-8">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 text-xs font-semibold border border-indigo-500/20">
+              <iconify-icon icon="solar:code-file-linear"></iconify-icon>
+              Export Anywhere
+            </div>
+            <h2 class="text-3xl md:text-4xl font-semibold text-white tracking-tight leading-tight">
+              Your schema, translated to <br>
+              <span class="text-indigo-400">production-ready code.</span>
+            </h2>
+            <p class="text-lg text-zinc-400 leading-relaxed">
+              Stop writing boilerplate migrations. CoSchemaLab automatically converts your visual diagram into optimized SQL, strictly typed Prisma schemas, TypeORM entities, or raw JSON.
+            </p>
+            <div class="space-y-4">
+              <div class="flex items-start gap-3">
+                <div class="mt-1 w-6 h-6 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-indigo-400">
+                  <iconify-icon icon="solar:check-read-linear" class="text-sm"></iconify-icon>
+                </div>
+                <div>
+                  <h4 class="text-white font-medium text-sm">Prisma Schema</h4>
+                  <p class="text-zinc-500 text-sm mt-1">Full relations, enums, and types support.</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="mt-1 w-6 h-6 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-indigo-400">
+                  <iconify-icon icon="solar:check-read-linear" class="text-sm"></iconify-icon>
+                </div>
+                <div>
+                  <h4 class="text-white font-medium text-sm">SQL DDL</h4>
+                  <p class="text-zinc-500 text-sm mt-1">Compatible with Postgres, MySQL and SQLite.</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="mt-1 w-6 h-6 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-indigo-400">
+                  <iconify-icon icon="solar:check-read-linear" class="text-sm"></iconify-icon>
+                </div>
+                <div>
+                  <h4 class="text-white font-medium text-sm">TypeORM &amp; JSON</h4>
+                  <p class="text-zinc-500 text-sm mt-1">Ready for TypeScript backends or frontend mocking.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="w-full lg:w-1/2">
+            <div class="rounded-xl bg-[#0d0d0f] border border-zinc-800 shadow-2xl overflow-hidden">
+              <div class="flex border-b border-zinc-800">
+                <button class="px-4 py-3 text-xs font-medium text-white border-b-2 border-indigo-500 bg-zinc-900">schema.prisma</button>
+                <button class="px-4 py-3 text-xs font-medium text-zinc-500 hover:text-zinc-300">init.sql</button>
+                <button class="px-4 py-3 text-xs font-medium text-zinc-500 hover:text-zinc-300">entity.ts</button>
+              </div>
+              <div class="p-6 overflow-x-auto">
+                <pre class="font-mono text-xs leading-6"><span class="code-syntax-pink">model</span> <span class="code-syntax-blue">User</span> &#123;
+  <span class="code-syntax-green">id</span>        <span class="code-syntax-blue">String</span>   <span class="code-syntax-pink">&#64;id</span> <span class="code-syntax-pink">&#64;default</span>(<span class="code-syntax-blue">uuid</span>())
+  <span class="code-syntax-green">email</span>     <span class="code-syntax-blue">String</span>   <span class="code-syntax-pink">&#64;unique</span>
+  <span class="code-syntax-green">name</span>      <span class="code-syntax-blue">String?</span>
+  <span class="code-syntax-green">posts</span>     <span class="code-syntax-blue">Post[]</span>
+  <span class="code-syntax-green">role</span>      <span class="code-syntax-blue">Role</span>     <span class="code-syntax-pink">&#64;default</span>(USER)
+  <span class="code-syntax-green">createdAt</span> <span class="code-syntax-blue">DateTime</span> <span class="code-syntax-pink">&#64;default</span>(<span class="code-syntax-blue">now</span>())
+&#125;
+
+<span class="code-syntax-pink">model</span> <span class="code-syntax-blue">Post</span> &#123;
+  <span class="code-syntax-green">id</span>        <span class="code-syntax-blue">String</span>   <span class="code-syntax-pink">&#64;id</span> <span class="code-syntax-pink">&#64;default</span>(<span class="code-syntax-blue">uuid</span>())
+  <span class="code-syntax-green">title</span>     <span class="code-syntax-blue">String</span>
+  <span class="code-syntax-green">content</span>   <span class="code-syntax-blue">String?</span>
+  <span class="code-syntax-green">authorId</span>  <span class="code-syntax-blue">String</span>
+  <span class="code-syntax-green">author</span>    <span class="code-syntax-blue">User</span>     <span class="code-syntax-pink">&#64;relation</span>(<span class="code-syntax-green">fields</span>: [<span class="code-syntax-green">authorId</span>], <span class="code-syntax-green">references</span>: [<span class="code-syntax-green">id</span>])
+&#125;
+
+<span class="code-syntax-pink">enum</span> <span class="code-syntax-blue">Role</span> &#123;
+  USER
+  ADMIN
+&#125;</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Feature 2: Mock Data -->
+    <section id="mock-data" class="py-32 relative bg-zinc-900/20 border-t border-zinc-900">
+      <div class="max-w-7xl mx-auto px-6">
+        <div class="flex flex-col lg:flex-row-reverse items-center gap-16">
+          <div class="w-full lg:w-1/2 space-y-8">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold border border-emerald-500/20">
+              <iconify-icon icon="solar:magic-stick-3-linear"></iconify-icon>
+              Smart Seeding
+            </div>
+            <h2 class="text-3xl md:text-4xl font-semibold text-white tracking-tight leading-tight">
+              Realistic mock data <br>
+              <span class="text-emerald-400">in seconds, not hours.</span>
+            </h2>
+            <p class="text-lg text-zinc-400 leading-relaxed">
+              Stop testing with "foo bar". Our integrated Faker.js engine analyzes your column names and types to auto-populate thousands of rows with realistic names, emails, addresses, and dates.
+            </p>
+            <ul class="space-y-4 text-zinc-400">
+              <li class="flex items-center gap-3">
+                <iconify-icon icon="solar:refresh-circle-linear" class="text-xl text-emerald-400"></iconify-icon>
+                <span>One-click generation of 1,000+ rows</span>
+              </li>
+              <li class="flex items-center gap-3">
+                <iconify-icon icon="solar:link-circle-linear" class="text-xl text-emerald-400"></iconify-icon>
+                <span>Maintains referential integrity (Foreign Keys)</span>
+              </li>
+              <li class="flex items-center gap-3">
+                <iconify-icon icon="solar:export-linear" class="text-xl text-emerald-400"></iconify-icon>
+                <span>Export as SQL Insert statements or JSON</span>
+              </li>
+            </ul>
+          </div>
+          <div class="w-full lg:w-1/2">
+            <div class="relative rounded-xl border border-zinc-800 bg-zinc-950 shadow-2xl overflow-hidden">
+              <div class="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900/50">
+                <span class="text-xs font-semibold text-zinc-300">Preview: User Table (5/1000)</span>
+                <button class="px-2 py-1 bg-emerald-600/20 text-emerald-400 text-[10px] uppercase font-bold rounded border border-emerald-600/30 hover:bg-emerald-600/30 transition-colors">Regenerate</button>
+              </div>
+              <div class="w-full overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="bg-zinc-900/30 text-[10px] uppercase font-semibold text-zinc-500">
+                      <th class="p-3 border-b border-zinc-800">ID</th>
+                      <th class="p-3 border-b border-zinc-800">Full Name</th>
+                      <th class="p-3 border-b border-zinc-800">Email</th>
+                      <th class="p-3 border-b border-zinc-800">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody class="text-xs font-mono text-zinc-400 divide-y divide-zinc-800/50">
+                    <tr class="hover:bg-zinc-900/50 transition-colors">
+                      <td class="p-3 text-zinc-600">e4d2...9a1b</td>
+                      <td class="p-3 text-zinc-200">Alexandria O'Connell</td>
+                      <td class="p-3">alex.oconnell&#64;example.com</td>
+                      <td class="p-3"><span class="px-1.5 py-0.5 rounded bg-green-500/10 text-green-400 text-[10px]">Active</span></td>
+                    </tr>
+                    <tr class="hover:bg-zinc-900/50 transition-colors">
+                      <td class="p-3 text-zinc-600">b8a1...2c4d</td>
+                      <td class="p-3 text-zinc-200">Dr. Marcus Chen</td>
+                      <td class="p-3">marcus.chen&#64;hospital.org</td>
+                      <td class="p-3"><span class="px-1.5 py-0.5 rounded bg-green-500/10 text-green-400 text-[10px]">Active</span></td>
+                    </tr>
+                    <tr class="hover:bg-zinc-900/50 transition-colors">
+                      <td class="p-3 text-zinc-600">f9c3...7e2f</td>
+                      <td class="p-3 text-zinc-200">Sarah Jenkins</td>
+                      <td class="p-3">sarah.j&#64;tech-corp.io</td>
+                      <td class="p-3"><span class="px-1.5 py-0.5 rounded bg-yellow-500/10 text-yellow-400 text-[10px]">Pending</span></td>
+                    </tr>
+                    <tr class="hover:bg-zinc-900/50 transition-colors">
+                      <td class="p-3 text-zinc-600">a1b2...3c4d</td>
+                      <td class="p-3 text-zinc-200">James Wilson</td>
+                      <td class="p-3">j.wilson88&#64;gmail.com</td>
+                      <td class="p-3"><span class="px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 text-[10px]">Banned</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bento Grid Features -->
+    <section id="features" class="py-32 border-t border-zinc-900 bg-zinc-950">
+      <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center mb-20">
+          <h2 class="text-3xl font-semibold text-white tracking-tight mb-4">Everything you need to ship faster</h2>
+          <p class="text-zinc-400">Built for developers who care about productivity.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[250px]">
+          <div class="md:col-span-2 rounded-2xl border border-zinc-800 bg-zinc-900/20 p-8 flex flex-col justify-between hover:border-zinc-700 transition-colors group">
+            <div>
+              <iconify-icon icon="solar:users-group-rounded-linear" class="text-3xl text-indigo-400 mb-4"></iconify-icon>
+              <h3 class="text-xl font-semibold text-white mb-2">Real-time Collaboration</h3>
+              <p class="text-zinc-400 text-sm max-w-sm">Work together with your team on the same schema. See cursors, changes, and comments in real-time.</p>
+            </div>
+            <div class="flex -space-x-3 mt-4">
+              <div class="w-8 h-8 rounded-full bg-zinc-700 border-2 border-zinc-900"></div>
+              <div class="w-8 h-8 rounded-full bg-indigo-600 border-2 border-zinc-900 flex items-center justify-center text-[10px] text-white">JD</div>
+              <div class="w-8 h-8 rounded-full bg-purple-600 border-2 border-zinc-900 flex items-center justify-center text-[10px] text-white">AS</div>
+            </div>
+          </div>
+          <div class="rounded-2xl border border-zinc-800 bg-zinc-900/20 p-8 flex flex-col justify-between hover:border-zinc-700 transition-colors">
+            <div>
+              <iconify-icon icon="solar:history-linear" class="text-3xl text-orange-400 mb-4"></iconify-icon>
+              <h3 class="text-xl font-semibold text-white mb-2">History &amp; Undo</h3>
+              <p class="text-zinc-400 text-sm">Mistakes happen. Jump back in time with infinite undo/redo capability.</p>
+            </div>
+          </div>
+          <div class="rounded-2xl border border-zinc-800 bg-zinc-900/20 p-8 flex flex-col justify-between hover:border-zinc-700 transition-colors">
+            <div>
+              <iconify-icon icon="solar:laptop-linear" class="text-3xl text-blue-400 mb-4"></iconify-icon>
+              <h3 class="text-xl font-semibold text-white mb-2">Local First</h3>
+              <p class="text-zinc-400 text-sm">Works offline. Your schema is saved locally in your browser.</p>
+            </div>
+          </div>
+          <div class="md:col-span-2 rounded-2xl border border-zinc-800 bg-zinc-900/20 p-8 flex flex-col justify-between hover:border-zinc-700 transition-colors relative overflow-hidden">
+            <div class="absolute right-0 bottom-0 w-64 h-64 bg-gradient-to-tl from-zinc-800/50 to-transparent rounded-tl-full opacity-30"></div>
+            <div class="relative z-10">
+              <iconify-icon icon="solar:cloud-download-linear" class="text-3xl text-white mb-4"></iconify-icon>
+              <h3 class="text-xl font-semibold text-white mb-2">100% Open Source</h3>
+              <p class="text-zinc-400 text-sm max-w-sm">Self-host it, fork it, extend it. We believe tools should be open.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-32 border-t border-zinc-900 bg-zinc-950">
+      <div class="max-w-4xl mx-auto px-6 text-center">
+        <h2 class="text-4xl md:text-5xl font-semibold tracking-tight text-white mb-8">
+          Start designing your database<br>
+          <span class="text-zinc-500">without the headache.</span>
+        </h2>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a routerLink="/login" class="px-8 py-4 bg-white text-zinc-950 text-sm font-semibold rounded-full hover:bg-zinc-200 transition-colors w-full sm:w-auto shadow-xl shadow-white/5">
+            Open Editor Now
+          </a>
+          <a href="https://github.com/221geek/co-schema-lab" target="_blank" rel="noopener" class="px-8 py-4 bg-transparent border border-zinc-800 text-zinc-300 text-sm font-semibold rounded-full hover:text-white hover:border-zinc-700 transition-colors w-full sm:w-auto flex items-center justify-center gap-2">
+            <iconify-icon icon="solar:book-linear" class="text-lg"></iconify-icon>
+            Read Documentation
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-zinc-900 bg-zinc-950 pt-16 pb-12">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+        <div class="col-span-2 md:col-span-1">
+          <a routerLink="/" class="flex items-center gap-2 mb-4">
+            <img src="Coschemalab.png" alt="CoSchemaLab" class="h-7 w-auto" />
+          </a>
+          <p class="text-xs text-zinc-500 leading-relaxed max-w-xs">
+            Open source visual database designer with mock data generation and ORM exports.
+          </p>
+        </div>
+        <div>
+          <h4 class="text-xs font-semibold text-white uppercase tracking-wider mb-4">Product</h4>
+          <ul class="space-y-3">
+            <li><a routerLink="/login" class="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">Editor</a></li>
+            <li><a href="#mock-data" class="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">Mock Data</a></li>
+            <li><a href="#exports" class="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">SQL Export</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-xs font-semibold text-white uppercase tracking-wider mb-4">Resources</h4>
+          <ul class="space-y-3">
+            <li><a href="https://github.com/221geek/co-schema-lab" target="_blank" rel="noopener" class="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">GitHub</a></li>
+            <li><a href="https://github.com/221geek/co-schema-lab" target="_blank" rel="noopener" class="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">Documentation</a></li>
+            <li><a href="https://github.com/221geek/co-schema-lab" target="_blank" rel="noopener" class="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">Examples</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-xs font-semibold text-white uppercase tracking-wider mb-4">Legal</h4>
+          <ul class="space-y-3">
+            <li><a href="#" class="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">Privacy</a></li>
+            <li><a href="#" class="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">Terms</a></li>
+            <li><a href="https://github.com/221geek/co-schema-lab/blob/main/LICENSE" target="_blank" rel="noopener" class="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">License (MIT)</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-zinc-900 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        <span class="text-xs text-zinc-600">© 2025 CoSchemaLab. All rights reserved.</span>
+        <div class="flex gap-4">
+          <a href="https://github.com/221geek/co-schema-lab" target="_blank" rel="noopener" class="text-zinc-500 hover:text-white transition-colors">
+            <iconify-icon icon="solar:brand-github-linear" class="text-xl"></iconify-icon>
+          </a>
+          <a href="https://twitter.com" target="_blank" rel="noopener" class="text-zinc-500 hover:text-white transition-colors">
+            <iconify-icon icon="solar:brand-twitter-linear" class="text-xl"></iconify-icon>
+          </a>
+          <a href="https://discord.com" target="_blank" rel="noopener" class="text-zinc-500 hover:text-white transition-colors">
+            <iconify-icon icon="solar:brand-discord-linear" class="text-xl"></iconify-icon>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</div>
