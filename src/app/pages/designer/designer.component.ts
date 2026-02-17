@@ -652,9 +652,8 @@ export class DesignerComponent implements OnInit, OnDestroy, AfterViewChecked {
   onCanvasDblClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
     if (target.closest('[data-table-card]') || target.closest('[data-relationship-badge]')) return;
-    const container = this.canvasTransform?.nativeElement;
-    if (!container) return;
-    const rect = container.getBoundingClientRect();
+    const el = event.currentTarget as HTMLElement;
+    const rect = el.getBoundingClientRect();
     const zoom = this.zoomLevel();
     const contentX = (event.clientX - rect.left) / zoom;
     const contentY = (event.clientY - rect.top) / zoom;
@@ -708,9 +707,11 @@ export class DesignerComponent implements OnInit, OnDestroy, AfterViewChecked {
     if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
     const zoom = this.zoomLevel();
+    const panX = this.panOffsetX();
+    const panY = this.panOffsetY();
     return {
-      x: (clientX - rect.left - this.panOffsetX()) / zoom,
-      y: (clientY - rect.top - this.panOffsetY()) / zoom
+      x: (clientX - rect.left - panX) / zoom,
+      y: (clientY - rect.top - panY) / zoom
     };
   }
 
