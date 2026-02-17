@@ -54,6 +54,8 @@ export class DesignerComponent implements OnInit, OnDestroy, AfterViewChecked {
   exportWithFakeData = signal(false);
   /** Nombre de lignes par table (tableId -> count) */
   exportRowCounts = signal<Record<string, number>>({});
+  /** Tables repliées (affichent moins de propriétés) */
+  foldedTableIds = signal<Set<string>>(new Set());
 
   @ViewChild('canvasRef') canvasRef?: ElementRef<HTMLElement>;
   @ViewChild('canvasTransform') canvasTransform?: ElementRef<HTMLElement>;
@@ -97,6 +99,7 @@ export class DesignerComponent implements OnInit, OnDestroy, AfterViewChecked {
           const migratedEnums = this.migrateEnumsFromFields(normalizedTables, boardEnums);
           this.enums.set(migratedEnums);
           const tables = normalizedTables;
+          this.foldedTableIds.set(new Set(tables.filter(t => (t.fields?.length ?? 0) > this.FOLD_THRESHOLD).map(t => t.id)));
           const tableIds = new Set(tables.map((t: Table) => t.id));
           const validRels = (board.relationships ?? [])
             .filter((r: Relationship) => tableIds.has(r.fromTableId) && tableIds.has(r.toTableId))
@@ -285,20 +288,32 @@ export class DesignerComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.scheduleAutoSave();
   }
 
-  addTable() {
+  addTable(x?: number, y?: number) {
     this.pushState();
     const newId = `table-${Date.now()}`;
     const newTable: Table = {
       id: newId,
       name: 'NewTable',
-      x: 300,
-      y: 300,
+      x: x ?? 300,
+      y: y ?? 300,
       icon: 'solar:widget-add-linear',
       fields: [{ id: `f-${Date.now()}`, name: 'id', type: 'string', isPrimary: true }]
     };
     this.tables.update(tabs => [...tabs, newTable]);
-    this.selectedTableId.set(newId);
     this.scheduleAutoSave();
+  }
+
+  onCanvasDblClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (target.closest('[data-table-card]') || target.closest('[data-relationship-badge]')) return;
+    const canvas = this.canvasRef?.nativeElement;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const viewportX = event.clientX - rect.left;
+    const viewportY = event.clientY - rect.top;
+    const contentX = (viewportX - this.panOffsetX()) / this.zoomLevel();
+    const contentY = (viewportY - this.panOffsetY()) / this.zoomLevel();
+    this.addTable(Math.round(contentX), Math.round(contentY));
   }
 
   selectTable(id: string) {
@@ -306,17 +321,60 @@ export class DesignerComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.selectedRelationshipId.set(null);
   }
 
+  readonly FOLD_THRESHOLD = 5;
+  readonly FOLDED_VISIBLE = 3;
+
+  isTableFolded(tableId: string): boolean {
+    return this.foldedTableIds().has(tableId);
+  }
+
+  toggleTableFold(tableId: string, event?: Event) {
+    event?.stopPropagation();
+    this.foldedTableIds.update(s => {
+      const next = new Set(s);
+      if (next.has(tableId)) next.delete(tableId);
+      else next.add(tableId);
+      return next;
+    });
+  }
+
+  getVisibleFields(table: Table): { fields: typeof table.fields; hiddenCount: number } {
+    const folded = this.isTableFolded(table.id);
+    const fields = table.fields || [];
+    if (!folded || fields.length <= this.FOLDED_VISIBLE) {
+      return { fields, hiddenCount: 0 };
+    }
+    return {
+      fields: fields.slice(0, this.FOLDED_VISIBLE),
+      hiddenCount: fields.length - this.FOLDED_VISIBLE
+    };
+  }
+
   addField(tableId: string) {
     this.pushState();
     this.tables.update(tabs => tabs.map(t => {
       if (t.id === tableId) {
-        return {
-          ...t,
-          fields: [...t.fields, { id: `f-${Date.now()}`, name: 'new_field', type: 'string' }]
-        };
+        const newFields = [...t.fields, { id: `f-${Date.now()}`, name: 'new_field', type: 'string' }];
+        if (newFields.length > this.FOLD_THRESHOLD) {
+          this.foldedTableIds.update(s => new Set(s).add(tableId));
+        }
+        return { ...t, fields: newFields };
       }
       return t;
     }));
+    this.scheduleAutoSave();
+  }
+
+  removeField(tableId: string, fieldId: string, event?: Event) {
+    event?.stopPropagation();
+    this.pushState();
+    this.tables.update(tabs => tabs.map(t => {
+      if (t.id !== tableId) return t;
+      return { ...t, fields: t.fields.filter(f => f.id !== fieldId) };
+    }));
+    if (this.selectedTableId() === tableId) {
+      this.selectedRelationshipId.set(null);
+    }
     this.scheduleAutoSave();
   }
 
