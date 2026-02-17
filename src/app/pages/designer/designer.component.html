@@ -1,16 +1,32 @@
 <header
     class="h-14 border-b border-zinc-800 flex items-center justify-between px-5 bg-zinc-950/80 backdrop-blur-sm z-50">
-    <div class="flex items-center gap-6">
+    <div class="flex items-center gap-4 shrink-0">
         <button (click)="goToBoards()" class="flex items-center gap-2 group">
             <img src="/Coschemalab.png" alt="CoSchemaLab" class="h-8 w-auto object-contain">
         </button>
-        <div class="h-4 w-[1px] bg-zinc-800"></div>
+        @if (editingBoardName()) {
         <input type="text" [value]="boardName()" (focus)="pushState()" (input)="boardName.set($any($event.target).value); scheduleAutoSave()"
-            class="text-sm text-zinc-300 bg-transparent border-none focus:outline-none focus:ring-0 w-48 px-2 py-1 rounded hover:bg-zinc-800/50"
+            (blur)="editingBoardName.set(false)" (keydown.enter)="editingBoardName.set(false)"
+            class="text-sm text-zinc-300 bg-zinc-800/50 border border-zinc-600 rounded px-2 py-0.5 w-32 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             placeholder="Nom du board">
+        } @else {
+        <button (click)="editingBoardName.set(true)" class="text-sm text-zinc-400 hover:text-zinc-300 truncate max-w-[140px] text-left">
+            {{ boardName() || 'Nom du board' }}
+        </button>
+        }
     </div>
 
-    <div class="flex items-center gap-3">
+    <div class="flex-1 flex justify-center px-4">
+        <div class="flex items-center gap-1.5 w-full max-w-xs">
+            <iconify-icon icon="solar:magnifer-linear" class="text-zinc-500 text-lg shrink-0"></iconify-icon>
+            <input #tableSearchInput type="text" [ngModel]="tableSearchQuery()" (ngModelChange)="tableSearchQuery.set($event)"
+                placeholder="Rechercher une table..."
+                title="Rechercher (Ctrl+F)"
+                class="flex-1 px-3 py-1.5 rounded-md bg-zinc-900 border border-zinc-700 text-sm text-white placeholder-zinc-500 focus:border-indigo-500 outline-none">
+        </div>
+    </div>
+
+    <div class="flex items-center gap-3 shrink-0">
         <div class="flex items-center gap-1 -space-x-2">
             @for (user of connectedUsers(); track user.userId) {
             <div [title]="getHoverLabel(user)"
@@ -59,21 +75,98 @@
                 <iconify-icon [icon]="linkCopied() ? 'solar:check-circle-linear' : 'solar:link-linear'" class="text-lg"></iconify-icon>
             </button>
         </div>
-        <!-- <div class="bg-zinc-900/90 border border-zinc-800 backdrop-blur rounded-lg p-1 flex items-center gap-0.5 shadow-2xl">
-            <button (click)="zoomOut()" class="p-2 rounded-md text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors" title="Zoom arrière">
-                <iconify-icon icon="solar:minimalistic-magnifer-linear" class="text-lg"></iconify-icon>
+        <div
+            class="bg-zinc-900/90 border border-zinc-800 backdrop-blur rounded-lg p-1.5 flex flex-col gap-1 shadow-2xl">
+            <button (click)="importPanelOpen.set(true); importError.set(null); importSqlContent.set(''); importJsonContent.set(''); importMode.set('sql')"
+                class="p-2 rounded-md text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors"
+                title="Importer depuis SQL">
+                <iconify-icon icon="solar:import-linear" class="text-lg"></iconify-icon>
             </button>
-            <button (click)="zoomIn()" class="p-2 rounded-md text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors" title="Zoom avant">
-                <iconify-icon icon="solar:minimalistic-magnifer-add-linear" class="text-lg"></iconify-icon>
+            <button (click)="exportPanelOpen.set(true)"
+                class="p-2 rounded-md text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors"
+                title="Exporter le schéma">
+                <iconify-icon icon="solar:export-linear" class="text-lg"></iconify-icon>
             </button>
-        </div> -->
+            <button (click)="autoLayout()"
+                class="p-2 rounded-md text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors"
+                title="Réorganiser les tables">
+                <iconify-icon icon="solar:sort-by-alphabet-linear" class="text-lg"></iconify-icon>
+            </button>
+            <button (click)="templatesPanelOpen.set(true)"
+                class="p-2 rounded-md text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors"
+                title="Templates de schémas">
+                <iconify-icon icon="solar:widget-5-linear" class="text-lg"></iconify-icon>
+            </button>
+            <button (click)="validationPanelOpen.set(true)"
+                class="p-2 rounded-md text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors relative"
+                title="Validation du schéma">
+                <iconify-icon icon="solar:danger-triangle-linear" class="text-lg"></iconify-icon>
+                @if (getValidationWarnings().length > 0) {
+                <span class="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-amber-500/90 text-[10px] font-bold text-zinc-950 flex items-center justify-center">
+                    {{ getValidationWarnings().length }}
+                </span>
+                }
+            </button>
+        </div>
     </div>
+
+    <!-- Panneau Validation -->
+    @if (validationPanelOpen()) {
+    <aside class="fixed inset-y-0 right-0 w-80 border-l border-zinc-800 bg-zinc-950/95 backdrop-blur-md z-[60] flex flex-col animate-in slide-in-from-right duration-300">
+        <div class="flex items-center justify-between p-6 border-b border-zinc-800">
+            <h2 class="text-lg font-bold text-white">Validation</h2>
+            <button (click)="validationPanelOpen.set(false)" class="text-zinc-500 hover:text-white transition-colors">
+                <iconify-icon icon="solar:close-circle-linear" class="text-xl"></iconify-icon>
+            </button>
+        </div>
+        <div class="p-6 flex flex-col gap-3 overflow-y-auto">
+            @if (getValidationWarnings().length === 0) {
+            <p class="text-sm text-zinc-500">Aucun avertissement.</p>
+            } @else {
+            @for (w of getValidationWarnings(); track w.tableId + w.type + w.message) {
+            <div (click)="w.tableId && selectTableById(w.tableId); validationPanelOpen.set(false)"
+                class="px-4 py-2 rounded-lg bg-zinc-900/80 border border-zinc-800 hover:bg-zinc-800 cursor-pointer transition-colors">
+                <span class="text-[10px] uppercase text-amber-500 font-medium">{{ w.type }}</span>
+                <p class="text-sm text-zinc-300">{{ w.message }}</p>
+                @if (w.tableName) {
+                <span class="text-xs text-zinc-500">{{ w.tableName }}</span>
+                }
+            </div>
+            }
+            }
+        </div>
+    </aside>
+    <div class="fixed inset-0 bg-black/30 z-[55]" (click)="validationPanelOpen.set(false)"></div>
+    }
+
+    <!-- Panneau Templates -->
+    @if (templatesPanelOpen()) {
+    <aside class="fixed inset-y-0 right-0 w-80 border-l border-zinc-800 bg-zinc-950/95 backdrop-blur-md z-[60] flex flex-col animate-in slide-in-from-right duration-300">
+        <div class="flex items-center justify-between p-6 border-b border-zinc-800">
+            <h2 class="text-lg font-bold text-white">Templates</h2>
+            <button (click)="templatesPanelOpen.set(false)" class="text-zinc-500 hover:text-white transition-colors">
+                <iconify-icon icon="solar:close-circle-linear" class="text-xl"></iconify-icon>
+            </button>
+        </div>
+        <div class="p-6 flex flex-col gap-3 overflow-y-auto">
+            @for (tpl of SCHEMA_TEMPLATES; track tpl.name) {
+            <button (click)="applyTemplate(tpl)"
+                class="w-full px-4 py-3 rounded-lg bg-zinc-900/80 border border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700 transition-colors text-left">
+                <span class="text-sm font-medium text-white block">{{ tpl.name }}</span>
+                <span class="text-[10px] text-zinc-500">{{ tpl.desc }}</span>
+            </button>
+            }
+        </div>
+    </aside>
+    <div class="fixed inset-0 bg-black/30 z-[55]" (click)="templatesPanelOpen.set(false)"></div>
+    }
 
     <!-- Canvas -->
     <div #canvasRef class="flex-1 relative h-full overflow-hidden select-none"
         [class.cursor-grab]="spacePressed && !isPanning"
         [class.cursor-grabbing]="isPanning"
-        (click)="selectedTableId.set(null); selectedRelationshipId.set(null); cancelConnecting()"
+        [class.cursor-crosshair]="selectionBoxStart()"
+        (click)="onCanvasClick($event)"
         (mousedown)="onCanvasMouseDown($event)"
         (dblclick)="onCanvasDblClick($event)" (mousemove)="onCanvasMouseMove($event)" (wheel)="onCanvasWheel($event)">
         <!-- Remote cursors -->
@@ -93,7 +186,7 @@
         }
         <div #canvasTransform class="absolute inset-0 will-change-transform" [style.transform]="'translate(' + panOffsetX() + 'px, ' + panOffsetY() + 'px) scale(' + zoomLevel() + ')'" style="transform-origin: 0 0;">
             <!-- SVG Connections -->
-            <svg class="absolute inset-0 w-full h-full z-0">
+            <svg class="absolute inset-0 w-full h-full z-0 overflow-visible">
                 <defs>
                     <marker id="arrowhead" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
                         <polygon points="0 0, 5 2, 0 4" fill="#6366f1" opacity="0.85"/>
@@ -129,6 +222,12 @@
                 </path>
                 }
             </svg>
+
+            @if (getSelectionBoxRect(); as rect) {
+            <div class="absolute border-2 border-indigo-500 bg-indigo-500/10 pointer-events-none z-10"
+                [style.left.px]="rect.x" [style.top.px]="rect.y" [style.width.px]="rect.w" [style.height.px]="rect.h">
+            </div>
+            }
 
             <!-- Relationship badges (sur la ligne) - z-40 pour passer au-dessus des tables -->
             @for (rel of getValidRelationships(); track rel.id) {
@@ -204,11 +303,14 @@
             <!-- Tables -->
             @for (table of tables(); track table.id) {
             <div [style.left.px]="table.x" [style.top.px]="table.y" data-table-card
-                (click)="$event.stopPropagation(); selectTable(table.id)" cdkDrag
-                (cdkDragEnded)="onDragEnded($event, table)" [class.border-indigo-500]="selectedTableId() === table.id"
-                [class.ring-2]="selectedTableId() === table.id"
-                [class.ring-indigo-500/50]="selectedTableId() === table.id"
-                [class.z-30]="selectedTableId() === table.id"
+                [class.opacity-40]="!tableMatchesSearch(table)"
+                [class.pointer-events-none]="!tableMatchesSearch(table)"
+                (click)="$event.stopPropagation(); selectTable(table.id, $event)" cdkDrag
+                (cdkDragEnded)="onDragEnded($event, table)" [class.border-indigo-500]="isTableSelected(table.id)"
+                [class.ring-2]="isTableSelected(table.id)"
+                [class.ring-indigo-500/50]="isTableSelected(table.id)"
+                [class.z-30]="isTableSelected(table.id)"
+                [class.border-amber-500/50]="getTableWarningCount(table.id) > 0"
                 class="absolute w-64 bg-[#1c1c1f] border border-[#3f3f46] rounded-lg shadow-2xl flex flex-col z-20 hover:border-indigo-500/50 transition-colors group active:scale-[0.98] cursor-pointer relative">
                 <!-- Connection points -->
                 <button type="button" data-connection-point [attr.data-table-id]="table.id" data-side="top"
@@ -258,13 +360,20 @@
                         </button>
                         }
                     </div>
+                    @if (getTableWarningCount(table.id) > 0) {
+                    <button (click)="$event.stopPropagation(); validationPanelOpen.set(true)"
+                        class="shrink-0 p-1 rounded text-amber-500 hover:bg-amber-500/10 transition-colors"
+                        [title]="getTableWarningCount(table.id) + ' avertissement(s)'">
+                        <iconify-icon icon="solar:danger-triangle-linear" class="text-sm"></iconify-icon>
+                    </button>
+                    }
                     <button (click)="$event.stopPropagation(); removeTable(table.id)"
                         class="text-zinc-600 hover:text-red-400 transition-colors shrink-0">
                         <iconify-icon icon="solar:trash-bin-trash-linear"></iconify-icon>
                     </button>
                 </div>
                 <!-- Fields -->
-                <div class="flex flex-col min-h-0 max-h-[320px] overflow-y-auto">
+                <div class="flex flex-col min-h-0 max-h-[320px] overflow-y-auto" data-table-fields-scroll>
                     @let visible = getVisibleFields(table);
                     @for (field of visible.fields; track field.id) {
                     <div
@@ -322,7 +431,7 @@
         class="w-80 border-l border-zinc-800 bg-zinc-950/50 backdrop-blur-md p-6 flex flex-col gap-6 animate-in slide-in-from-right duration-300">
         <div class="flex items-center justify-between">
             <h2 class="text-lg font-bold text-white">Table Properties</h2>
-            <button (click)="selectedTableId.set(null)" class="text-zinc-500 hover:text-white">
+            <button (click)="clearSelection()" class="text-zinc-500 hover:text-white">
                 <iconify-icon icon="solar:close-circle-linear" class="text-xl"></iconify-icon>
             </button>
         </div>
@@ -445,15 +554,6 @@
 
 </main>
 
-<!-- Footer: Bouton Export unique -->
-<div class="absolute bottom-5 right-5 z-50">
-    <button (click)="exportPanelOpen.set(true)"
-        class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-900/90 border border-zinc-800 hover:bg-zinc-800 backdrop-blur shadow-xl text-xs font-medium transition-colors">
-        <iconify-icon icon="solar:export-linear" class="text-sm"></iconify-icon>
-        Export
-    </button>
-</div>
-
 <!-- Sidenav Export -->
 @if (exportPanelOpen()) {
 <aside
@@ -510,12 +610,118 @@
                     <span class="text-[10px] text-zinc-500">{{ exportWithFakeData() ? 'Schema + données' : 'Tables et relations' }}</span>
                 </div>
             </button>
+            <button (click)="exportPrisma(); exportPanelOpen.set(false)"
+                class="flex items-center gap-3 w-full px-4 py-3 rounded-lg bg-zinc-900/80 border border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700 transition-colors text-left">
+                <iconify-icon icon="solar:code-square-linear" class="text-indigo-400 text-xl"></iconify-icon>
+                <div>
+                    <span class="text-sm font-medium text-white block">Prisma</span>
+                    <span class="text-[10px] text-zinc-500">Schema Prisma (.prisma)</span>
+                </div>
+            </button>
+            <button (click)="exportTypeORM(); exportPanelOpen.set(false)"
+                class="flex items-center gap-3 w-full px-4 py-3 rounded-lg bg-zinc-900/80 border border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700 transition-colors text-left">
+                <iconify-icon icon="solar:programming-linear" class="text-indigo-400 text-xl"></iconify-icon>
+                <div>
+                    <span class="text-sm font-medium text-white block">TypeORM</span>
+                    <span class="text-[10px] text-zinc-500">Entités TypeORM (.ts)</span>
+                </div>
+            </button>
         </div>
     </div>
 </aside>
 <!-- Overlay pour fermer au clic extérieur -->
 <div class="fixed inset-0 bg-black/30 z-[55]" (click)="exportPanelOpen.set(false)"></div>
 }
+
+<!-- Panneau Import SQL / JSON -->
+@if (importPanelOpen()) {
+<aside
+    class="fixed inset-y-0 right-0 w-96 border-l border-zinc-800 bg-zinc-950/95 backdrop-blur-md z-[60] flex flex-col animate-in slide-in-from-right duration-300">
+    <div class="flex items-center justify-between p-6 border-b border-zinc-800">
+        <h2 class="text-lg font-bold text-white">Importer</h2>
+        <button (click)="importPanelOpen.set(false)" class="text-zinc-500 hover:text-white transition-colors">
+            <iconify-icon icon="solar:close-circle-linear" class="text-xl"></iconify-icon>
+        </button>
+    </div>
+    <div class="flex border-b border-zinc-800">
+        <button (click)="importMode.set('sql'); importError.set(null)"
+            [class.bg-zinc-800]="importMode() === 'sql'"
+            [class.text-white]="importMode() === 'sql'"
+            [class.text-zinc-500]="importMode() !== 'sql'"
+            class="flex-1 py-2 px-4 text-sm font-medium transition-colors">SQL</button>
+        <button (click)="importMode.set('json'); importError.set(null)"
+            [class.bg-zinc-800]="importMode() === 'json'"
+            [class.text-white]="importMode() === 'json'"
+            [class.text-zinc-500]="importMode() !== 'json'"
+            class="flex-1 py-2 px-4 text-sm font-medium transition-colors">JSON</button>
+    </div>
+    <div class="p-6 flex flex-col gap-4 overflow-y-auto flex-1">
+        @if (importMode() === 'sql') {
+        <p class="text-sm text-zinc-400">Collez ou glissez-déposez un fichier .sql (CREATE TABLE). Les clés étrangères (REFERENCES) créent automatiquement les relations.</p>
+        <div class="relative"
+            (dragover)="onImportFileDragOver($event)"
+            (dragleave)="onImportFileDragLeave()"
+            (drop)="onImportFileDrop($event)">
+            <textarea
+                [ngModel]="importSqlContent()"
+                (ngModelChange)="importSqlContent.set($event); importError.set(null)"
+                placeholder="CREATE TABLE users (&#10;  id BIGINT PRIMARY KEY,&#10;  name VARCHAR(255)&#10;);&#10;&#10;CREATE TABLE orders (&#10;  id BIGINT PRIMARY KEY,&#10;  user_id BIGINT REFERENCES users(id)&#10;);"
+                class="w-full h-64 bg-zinc-900 border rounded-lg px-4 py-3 text-sm text-white font-mono placeholder-zinc-600 focus:border-indigo-500 outline-none resize-none transition-colors"
+                [class.border-indigo-500]="importDropActive()"
+                [class.border-zinc-700]="!importDropActive()"
+                [class.bg-indigo-500/5]="importDropActive()"></textarea>
+            @if (importDropActive()) {
+            <div class="absolute inset-0 flex items-center justify-center rounded-lg border-2 border-dashed border-indigo-500 bg-indigo-500/10 pointer-events-none">
+                <span class="text-indigo-400 font-medium">Déposez le fichier .sql</span>
+            </div>
+            }
+        </div>
+        } @else {
+        <p class="text-sm text-zinc-400">Collez ou glissez-déposez un fichier .json exporté par CoSchemaLab (tables, relationships, enums).</p>
+        <div class="relative"
+            (dragover)="onImportJsonDragOver($event)"
+            (dragleave)="onImportFileDragLeave()"
+            (drop)="onImportJsonDrop($event)">
+            <textarea
+                [ngModel]="importJsonContent()"
+                (ngModelChange)="importJsonContent.set($event); importError.set(null)"
+                placeholder="{&#10;  &quot;tables&quot;: [...],&#10;  &quot;relationships&quot;: [...]&#10;}"
+                class="w-full h-64 bg-zinc-900 border rounded-lg px-4 py-3 text-sm text-white font-mono placeholder-zinc-600 focus:border-indigo-500 outline-none resize-none transition-colors"
+                [class.border-indigo-500]="importDropActive()"
+                [class.border-zinc-700]="!importDropActive()"
+                [class.bg-indigo-500/5]="importDropActive()"></textarea>
+            @if (importDropActive()) {
+            <div class="absolute inset-0 flex items-center justify-center rounded-lg border-2 border-dashed border-indigo-500 bg-indigo-500/10 pointer-events-none">
+                <span class="text-indigo-400 font-medium">Déposez le fichier .json</span>
+            </div>
+            }
+        </div>
+        }
+        @if (importError(); as err) {
+        <div class="text-sm text-red-400">{{ err }}</div>
+        }
+        <button (click)="importMode() === 'sql' ? importFromSql() : importFromJson()"
+            class="w-full py-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition-colors flex items-center justify-center gap-2">
+            <iconify-icon icon="solar:import-linear"></iconify-icon>
+            Importer
+        </button>
+    </div>
+</aside>
+<div class="fixed inset-0 bg-black/30 z-[55]" (click)="importPanelOpen.set(false)"></div>
+}
+
+<!-- Mini-carte -->
+<div class="absolute bottom-5 right-5 z-50">
+    <svg width="120" height="80" class="rounded-lg border border-zinc-700 bg-zinc-900/90 cursor-pointer"
+        (click)="onMinimapClick($event)" viewBox="0 0 120 80" preserveAspectRatio="xMidYMid meet">
+        @let md = getMinimapData();
+        @for (t of md.tables; track $index) {
+        <rect [attr.x]="t.x" [attr.y]="t.y" [attr.width]="t.w" [attr.height]="t.h" fill="#3f3f46" stroke="#52525b" stroke-width="0.5" rx="2"/>
+        }
+        <rect [attr.x]="md.viewport.x" [attr.y]="md.viewport.y" [attr.width]="md.viewport.w" [attr.height]="md.viewport.h"
+            fill="none" stroke="#6366f1" stroke-width="1.5" opacity="0.8"/>
+    </svg>
+</div>
 
 <div class="absolute bottom-5 left-5 z-50 flex flex-col gap-3">
     <div class="flex items-center gap-3">

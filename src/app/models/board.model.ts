@@ -8,6 +8,8 @@ export interface Field {
   enumRef?: string;
   /** @deprecated Utiliser enumRef + enums du board. Conservé pour migration. */
   enumValues?: string[];
+  /** Pour type === 'Relation' : id de la relation dont ce champ est la clé étrangère */
+  relationId?: string;
 }
 
 /** Enum nommé réutilisable par toutes les tables du board */

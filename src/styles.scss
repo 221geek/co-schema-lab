@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Iconify web component - ensure proper display */
+iconify-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+}
+
 :root {
   font-family: 'Inter', sans-serif;
 }
