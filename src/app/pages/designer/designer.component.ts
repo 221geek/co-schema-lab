@@ -66,6 +66,10 @@ export class DesignerComponent implements OnInit, OnDestroy, AfterViewChecked {
   private presenceCleanup: (() => void) | null = null;
   private lastMouseX = 400;
   private lastMouseY = 300;
+  /** Pan du canvas (Espace+glisser ou clic molette) */
+  isPanning = false;
+  panStart: { clientX: number; clientY: number; panX: number; panY: number } | null = null;
+  spacePressed = false;
   private readonly MAX_UNDO = 10;
   private undoStack: { name: string; tables: Table[]; relationships: Relationship[]; enums: { name: string; values: string[] }[] }[] = [];
   private updateCursorPosition: ((x: number, y: number) => void) | null = null;
@@ -159,6 +163,18 @@ export class DesignerComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.unsubscribeBoard?.();
     this.presenceCleanup?.();
     this.unsubscribePresence?.();
+  }
+
+  onCanvasMouseDown(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (target.closest('[data-table-card]') || target.closest('[data-relationship-badge]') || target.closest('[data-connection-point]')) return;
+    if (this.connectingFrom()) return;
+    const canPan = event.button === 1 || (event.button === 0 && this.spacePressed);
+    if (canPan) {
+      event.preventDefault();
+      this.isPanning = true;
+      this.panStart = { clientX: event.clientX, clientY: event.clientY, panX: this.panOffsetX(), panY: this.panOffsetY() };
+    }
   }
 
   onCanvasMouseMove(event: MouseEvent) {
@@ -306,13 +322,12 @@ export class DesignerComponent implements OnInit, OnDestroy, AfterViewChecked {
   onCanvasDblClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
     if (target.closest('[data-table-card]') || target.closest('[data-relationship-badge]')) return;
-    const canvas = this.canvasRef?.nativeElement;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const viewportX = event.clientX - rect.left;
-    const viewportY = event.clientY - rect.top;
-    const contentX = (viewportX - this.panOffsetX()) / this.zoomLevel();
-    const contentY = (viewportY - this.panOffsetY()) / this.zoomLevel();
+    const container = this.canvasTransform?.nativeElement;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    const zoom = this.zoomLevel();
+    const contentX = (event.clientX - rect.left) / zoom;
+    const contentY = (event.clientY - rect.top) / zoom;
     this.addTable(Math.round(contentX), Math.round(contentY));
   }
 
@@ -705,12 +720,24 @@ export class DesignerComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   onDocumentMouseMove(event: MouseEvent) {
+    if (this.isPanning && this.panStart) {
+      const dx = event.clientX - this.panStart.clientX;
+      const dy = event.clientY - this.panStart.clientY;
+      this.panOffsetX.set(this.panStart.panX + dx);
+      this.panOffsetY.set(this.panStart.panY + dy);
+      return;
+    }
     if (this.connectingFrom()) {
       this.updatePreviewMousePos(event.clientX, event.clientY);
     }
   }
 
   onDocumentMouseUp(event: MouseEvent) {
+    if (this.isPanning && (event.button === 1 || event.button === 0)) {
+      this.isPanning = false;
+      this.panStart = null;
+      return;
+    }
     const from = this.connectingFrom();
     if (!from) return;
     const target = event.target as HTMLElement;
@@ -881,6 +908,27 @@ export class DesignerComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.cancelConnecting();
   }
 
+  @HostListener('document:keydown', ['$event'])
+  onKeyDown(event: KeyboardEvent) {
+    if (event.code === 'Space') {
+      const target = event.target as HTMLElement;
+      if (target?.closest('input, textarea, [contenteditable]')) return;
+      event.preventDefault();
+      this.spacePressed = true;
+    }
+  }
+
+  @HostListener('document:keyup', ['$event'])
+  onKeyUp(event: KeyboardEvent) {
+    if (event.code === 'Space') {
+      this.spacePressed = false;
+      if (this.isPanning) {
+        this.isPanning = false;
+        this.panStart = null;
+      }
+    }
+  }
+
   @HostListener('document:keydown.control.z', ['$event'])
   @HostListener('document:keydown.meta.z', ['$event'])
   onUndo(event: Event) {
@@ -940,14 +988,18 @@ export class DesignerComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   onCanvasWheel(event: WheelEvent) {
-    if (!event.ctrlKey && !event.metaKey) return;
     event.preventDefault();
-    const target = event.currentTarget as HTMLElement;
-    const rect = target?.getBoundingClientRect();
-    const mouseX = rect ? event.clientX - rect.left : this.lastMouseX;
-    const mouseY = rect ? event.clientY - rect.top : this.lastMouseY;
-    const delta = event.deltaY > 0 ? -0.1 : 0.1;
-    this.zoomAtMouse(Math.max(0.5, Math.min(2, this.zoomLevel() + delta)), mouseX, mouseY);
+    if (event.ctrlKey || event.metaKey) {
+      const target = event.currentTarget as HTMLElement;
+      const rect = target?.getBoundingClientRect();
+      const mouseX = rect ? event.clientX - rect.left : this.lastMouseX;
+      const mouseY = rect ? event.clientY - rect.top : this.lastMouseY;
+      const delta = event.deltaY > 0 ? -0.1 : 0.1;
+      this.zoomAtMouse(Math.max(0.5, Math.min(2, this.zoomLevel() + delta)), mouseX, mouseY);
+    } else {
+      this.panOffsetX.set(this.panOffsetX() - event.deltaX);
+      this.panOffsetY.set(this.panOffsetY() - event.deltaY);
+    }
   }
 
   private zoomAtMouse(newZoom: number, mouseX?: number, mouseY?: number) {

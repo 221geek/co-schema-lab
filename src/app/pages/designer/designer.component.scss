@@ -55,6 +55,11 @@
     }
 }
 
+/* Pas de transition sur transform pendant le drag des tables */
+:host ::ng-deep .cdk-drag-dragging {
+    transition: none !important;
+}
+
 .zoom-slider {
     &::-webkit-slider-runnable-track {
         height: 6px;
