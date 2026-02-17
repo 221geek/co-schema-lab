@@ -1,5 +1,5 @@
-# Stage 1: Build
-FROM node:20-alpine AS build
+# Stage 1: Build (Node 22.12+ required by Angular 20)
+FROM node:22.12-alpine AS build
 
 WORKDIR /app
 
