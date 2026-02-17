@@ -2,6 +2,8 @@
 
 Collaborative web application for designing database schemas in real time. Create tables, define relationships (1:1, 1:N, M:N), and export your schema to SQL or JSON with generated test data.
 
+**[Try it live](https://co-schema-lab.abdoulazizdione.dev)** · [Report a bug](https://github.com/your-username/CoSchemaLab_front/issues) · [Request a feature](https://github.com/your-username/CoSchemaLab_front/issues)
+
 ![Angular](https://img.shields.io/badge/Angular-20-DD0031?logo=angular)
 ![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%7C%20Auth-FFCA28?logo=firebase)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?logo=tailwindcss)
@@ -131,6 +133,16 @@ src/
 - **@faker-js/faker** – Data generation
 - **Angular CDK** – Drag & drop
 
+## Contributing
+
+Contributions are welcome! This is an open source project and we're looking for contributors. Feel free to:
+
+- Open an [issue](https://github.com/your-username/CoSchemaLab_front/issues) for bugs or feature requests
+- Submit a pull request
+- Improve documentation
+
 ## License
 
-Private
+MIT © [Abdoul Aziz Dione](https://abdoulazizdione.dev)
+
+See [LICENSE](LICENSE) for details.
